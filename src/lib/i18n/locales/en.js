@@ -1,5 +1,5 @@
 export default {
-  "app.name": "Taskivo",
+  "app.name": "Orqacel",
   "app.tagline": "Run your service business in one place",
 
   "nav.dashboard": "Dashboard",
@@ -62,7 +62,7 @@ export default {
   "auth.sign_in": "Sign in",
   "auth.sign_up": "Create account",
   "auth.sign_in_title": "Welcome back",
-  "auth.sign_in_subtitle": "Sign in to your Taskivo workspace",
+  "auth.sign_in_subtitle": "Sign in to your Orqacel workspace",
   "auth.sign_up_title": "Create your account",
   "auth.sign_up_subtitle": "Start managing clients, quotations and jobs",
   "auth.email": "Email",
@@ -97,12 +97,12 @@ export default {
   "onboarding.company_name": "Company name",
   "onboarding.create": "Create company",
   "onboarding.creating": "Creating...",
-  "onboarding.welcome": "Welcome to Taskivo",
+  "onboarding.welcome": "Welcome to Orqacel",
   "onboarding.welcome_subtitle": "Your workspace is ready. Let's get started.",
   "onboarding.go_dashboard": "Go to dashboard",
   "onboarding.add_company": "Add another company",
   "onboarding.no_company": "You don't have a company yet",
-  "onboarding.no_company_desc": "Create your first company to start working in Taskivo.",
+  "onboarding.no_company_desc": "Create your first company to start working in Orqacel.",
   "onboarding.country_hint": "Used for currency, taxes and dates in your documents.",
 
   "dashboard.title": "Dashboard",
@@ -252,8 +252,8 @@ export default {
   "landing.pricing_title": "Simple pricing",
   "landing.pricing_subtitle": "Start free. Upgrade when your business grows.",
   "landing.most_popular": "Most popular",
-  "landing.pricing_note": "Paid plans aren't available yet — Taskivo is free during the alpha.",
-  "landing.footer_note": "Taskivo — the workspace for freelancers and small service businesses.",
+  "landing.pricing_note": "Paid plans aren't available yet — Orqacel is free during the alpha.",
+  "landing.footer_note": "Orqacel — the workspace for freelancers and small service businesses.",
   "landing.footer_rights": "All rights reserved.",
   "landing.lang_note": "Available in 11 languages",
 

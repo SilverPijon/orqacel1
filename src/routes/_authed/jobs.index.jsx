@@ -17,7 +17,7 @@ import { deleteJob, listJobs } from "@/lib/jobs-fns";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 export const Route = createFileRoute("/_authed/jobs/")({
-  head: () => ({ meta: [{ title: "Taskivo — Jobs" }] }),
+  head: () => ({ meta: [{ title: "Orqacel — Jobs" }] }),
   component: JobsPage,
 });
 

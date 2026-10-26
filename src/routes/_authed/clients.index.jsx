@@ -17,7 +17,7 @@ import { deleteClient, listClients } from "@/lib/clients-fns";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 export const Route = createFileRoute("/_authed/clients/")({
-  head: () => ({ meta: [{ title: "Taskivo — Clients" }] }),
+  head: () => ({ meta: [{ title: "Orqacel — Clients" }] }),
   component: ClientsPage,
 });
 

@@ -1,5 +1,5 @@
 export default {
-  "app.name": "Taskivo",
+  "app.name": "Orqacel",
   "app.tagline": "Pārvaldi savu pakalpojumu uzņēmumu vienā vietā",
 
   "nav.dashboard": "Panelis",
@@ -62,7 +62,7 @@ export default {
   "auth.sign_in": "Pieteikties",
   "auth.sign_up": "Izveidot kontu",
   "auth.sign_in_title": "Sveiki atkal",
-  "auth.sign_in_subtitle": "Piesakieties savā Taskivo darbvietā",
+  "auth.sign_in_subtitle": "Piesakieties savā Orqacel darbvietā",
   "auth.sign_up_title": "Izveidojiet savu kontu",
   "auth.sign_up_subtitle": "Sāciet pārvaldīt klientus, piedāvājumus un darbus",
   "auth.email": "E-pasts",
@@ -97,12 +97,12 @@ export default {
   "onboarding.company_name": "Uzņēmuma nosaukums",
   "onboarding.create": "Izveidot uzņēmumu",
   "onboarding.creating": "Izveido...",
-  "onboarding.welcome": "Laipni lūdzam Taskivo",
+  "onboarding.welcome": "Laipni lūdzam Orqacel",
   "onboarding.welcome_subtitle": "Jūsu darbvieta ir gatava. Sāksim.",
   "onboarding.go_dashboard": "Uz paneli",
   "onboarding.add_company": "Pievienot citu uzņēmumu",
   "onboarding.no_company": "Jums vēl nav uzņēmuma",
-  "onboarding.no_company_desc": "Izveidojiet savu pirmo uzņēmumu, lai sāktu darbu Taskivo.",
+  "onboarding.no_company_desc": "Izveidojiet savu pirmo uzņēmumu, lai sāktu darbu Orqacel.",
   "onboarding.country_hint": "Tiek izmantots valūtai, nodokļiem un datumiem dokumentos.",
 
   "dashboard.title": "Panelis",
@@ -252,8 +252,8 @@ export default {
   "landing.pricing_title": "Vienkārša cena",
   "landing.pricing_subtitle": "Sāciet bez maksas. Jauniniet, kad uzņēmums aug.",
   "landing.most_popular": "Populārākais",
-  "landing.pricing_note": "Maksas plāni vēl nav pieejami — alfa versijā Taskivo ir bez maksas.",
-  "landing.footer_note": "Taskivo — darbvieta brīvmāksliniekiem un maziem pakalpojumu uzņēmumiem.",
+  "landing.pricing_note": "Maksas plāni vēl nav pieejami — alfa versijā Orqacel ir bez maksas.",
+  "landing.footer_note": "Orqacel — darbvieta brīvmāksliniekiem un maziem pakalpojumu uzņēmumiem.",
   "landing.footer_rights": "Visas tiesības aizsargātas.",
   "landing.lang_note": "Pieejams 11 valodās",
 

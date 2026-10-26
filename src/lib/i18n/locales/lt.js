@@ -1,5 +1,5 @@
 export default {
-  "app.name": "Taskivo",
+  "app.name": "Orqacel",
   "app.tagline": "Valdykite visą savo paslaugų verslą vienoje vietoje",
 
   "nav.dashboard": "Suvestinė",
@@ -62,7 +62,7 @@ export default {
   "auth.sign_in": "Prisijungti",
   "auth.sign_up": "Sukurti paskyrą",
   "auth.sign_in_title": "Sveiki sugrįžę",
-  "auth.sign_in_subtitle": "Prisijunkite prie savo Taskivo darbo srities",
+  "auth.sign_in_subtitle": "Prisijunkite prie savo Orqacel darbo srities",
   "auth.sign_up_title": "Sukurkite paskyrą",
   "auth.sign_up_subtitle": "Pradėkite valdyti klientus, pasiūlymus ir darbus",
   "auth.email": "El. paštas",
@@ -97,12 +97,12 @@ export default {
   "onboarding.company_name": "Įmonės pavadinimas",
   "onboarding.create": "Sukurti įmonę",
   "onboarding.creating": "Kuriama...",
-  "onboarding.welcome": "Sveiki atvykę į Taskivo",
+  "onboarding.welcome": "Sveiki atvykę į Orqacel",
   "onboarding.welcome_subtitle": "Jūsų darbo sritis paruošta. Pradėkime.",
   "onboarding.go_dashboard": "Į suvestinę",
   "onboarding.add_company": "Pridėti kitą įmonę",
   "onboarding.no_company": "Dar neturite įmonės",
-  "onboarding.no_company_desc": "Sukurkite pirmą įmonę ir pradėkite dirbti su Taskivo.",
+  "onboarding.no_company_desc": "Sukurkite pirmą įmonę ir pradėkite dirbti su Orqacel.",
   "onboarding.country_hint": "Naudojama valiutai, mokesčiams ir datoms dokumentuose.",
 
   "dashboard.title": "Suvestinė",
@@ -252,8 +252,8 @@ export default {
   "landing.pricing_title": "Paprastos kainos",
   "landing.pricing_subtitle": "Pradėkite nemokamai. Atsinaujinkite, kai verslas auga.",
   "landing.most_popular": "Populiariausias",
-  "landing.pricing_note": "Mokami planai dar neprieinami — alfa versijoje Taskivo nemokamas.",
-  "landing.footer_note": "Taskivo — darbo erdvė laisvai samdomiems specialistams ir mažoms paslaugų įmonėms.",
+  "landing.pricing_note": "Mokami planai dar neprieinami — alfa versijoje Orqacel nemokamas.",
+  "landing.footer_note": "Orqacel — darbo erdvė laisvai samdomiems specialistams ir mažoms paslaugų įmonėms.",
   "landing.footer_rights": "Visos teisės saugomos.",
   "landing.lang_note": "Prieinama 11 kalbų",
 

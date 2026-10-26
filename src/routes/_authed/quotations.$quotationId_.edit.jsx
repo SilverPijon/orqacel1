@@ -11,7 +11,7 @@ import { getQuotation } from "@/lib/quotations-fns";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 export const Route = createFileRoute("/_authed/quotations/$quotationId_/edit")({
-  head: () => ({ meta: [{ title: "Taskivo — Edit quotation" }] }),
+  head: () => ({ meta: [{ title: "Orqacel — Edit quotation" }] }),
   component: EditQuotationPage,
 });
 

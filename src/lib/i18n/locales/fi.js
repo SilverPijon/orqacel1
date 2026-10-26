@@ -1,5 +1,5 @@
 export default {
-  "app.name": "Taskivo",
+  "app.name": "Orqacel",
   "app.tagline": "Hoida palveluyritystäsi yhdessä paikassa",
 
   "nav.dashboard": "Etusivu",
@@ -62,7 +62,7 @@ export default {
   "auth.sign_in": "Kirjaudu",
   "auth.sign_up": "Luo tili",
   "auth.sign_in_title": "Tervetuloa takaisin",
-  "auth.sign_in_subtitle": "Kirjaudu Taskivo-työtilaan",
+  "auth.sign_in_subtitle": "Kirjaudu Orqacel-työtilaan",
   "auth.sign_up_title": "Luo tilisi",
   "auth.sign_up_subtitle": "Aloita asiakkaiden, tarjousten ja töiden hallinta",
   "auth.email": "Sähköposti",
@@ -97,12 +97,12 @@ export default {
   "onboarding.company_name": "Yrityksen nimi",
   "onboarding.create": "Luo yritys",
   "onboarding.creating": "Luodaan...",
-  "onboarding.welcome": "Tervetuloa Taskivoon",
+  "onboarding.welcome": "Tervetuloa Orqaceliin",
   "onboarding.welcome_subtitle": "Työtilasi on valmis. Aloitetaan.",
   "onboarding.go_dashboard": "Siirry etusivulle",
   "onboarding.add_company": "Lisää toinen yritys",
   "onboarding.no_company": "Sinulla ei ole vielä yritystä",
-  "onboarding.no_company_desc": "Luo ensimmäinen yrityksesi ja aloita Taskivon käyttö.",
+  "onboarding.no_company_desc": "Luo ensimmäinen yrityksesi ja aloita Orqacelin käyttö.",
   "onboarding.country_hint": "Käytetään valuuttaan, veroihin ja päivämääriin asiakirjoissa.",
 
   "dashboard.title": "Etusivu",
@@ -252,8 +252,8 @@ export default {
   "landing.pricing_title": "Yksinkertainen hinnoittelu",
   "landing.pricing_subtitle": "Aloita ilmaiseksi. Päivitä, kun yritys kasvaa.",
   "landing.most_popular": "Suosituin",
-  "landing.pricing_note": "Maksulliset paketit eivät ole vielä saatavilla — alpha-vaiheessa Taskivo on ilmainen.",
-  "landing.footer_note": "Taskivo — työtila freelancereille ja pienille palveluyrityksille.",
+  "landing.pricing_note": "Maksulliset paketit eivät ole vielä saatavilla — alpha-vaiheessa Orqacel on ilmainen.",
+  "landing.footer_note": "Orqacel — työtila freelancereille ja pienille palveluyrityksille.",
   "landing.footer_rights": "Kaikki oikeudet pidätetään.",
   "landing.lang_note": "Saatavilla 11 kielellä",
 

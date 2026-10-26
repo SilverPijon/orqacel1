@@ -1,5 +1,5 @@
 export default {
-  "app.name": "Taskivo",
+  "app.name": "Orqacel",
   "app.tagline": "Prowadź swoją firmę usługową w jednym miejscu",
 
   "nav.dashboard": "Pulpit",
@@ -62,7 +62,7 @@ export default {
   "auth.sign_in": "Zaloguj się",
   "auth.sign_up": "Utwórz konto",
   "auth.sign_in_title": "Witaj ponownie",
-  "auth.sign_in_subtitle": "Zaloguj się do swojej przestrzeni Taskivo",
+  "auth.sign_in_subtitle": "Zaloguj się do swojej przestrzeni Orqacel",
   "auth.sign_up_title": "Utwórz konto",
   "auth.sign_up_subtitle": "Zacznij zarządzać klientami, ofertami i zleceniami",
   "auth.email": "E-mail",
@@ -97,12 +97,12 @@ export default {
   "onboarding.company_name": "Nazwa firmy",
   "onboarding.create": "Utwórz firmę",
   "onboarding.creating": "Tworzenie...",
-  "onboarding.welcome": "Witaj w Taskivo",
+  "onboarding.welcome": "Witaj w Orqacel",
   "onboarding.welcome_subtitle": "Twoja przestrzeń jest gotowa. Zaczynajmy.",
   "onboarding.go_dashboard": "Przejdź do pulpitu",
   "onboarding.add_company": "Dodaj kolejną firmę",
   "onboarding.no_company": "Nie masz jeszcze firmy",
-  "onboarding.no_company_desc": "Utwórz pierwszą firmę, aby rozpocząć pracę w Taskivo.",
+  "onboarding.no_company_desc": "Utwórz pierwszą firmę, aby rozpocząć pracę w Orqacel.",
   "onboarding.country_hint": "Używane do waluty, podatków i dat w dokumentach.",
 
   "dashboard.title": "Pulpit",
@@ -252,8 +252,8 @@ export default {
   "landing.pricing_title": "Proste ceny",
   "landing.pricing_subtitle": "Zacznij bezpłatnie. Ulepsz plan, gdy firma się rozwinie.",
   "landing.most_popular": "Najpopularniejszy",
-  "landing.pricing_note": "Płatne plany nie są jeszcze dostępne — w wersji alfa Taskivo jest bezpłatny.",
-  "landing.footer_note": "Taskivo — przestrzeń pracy dla freelancerów i małych firm usługowych.",
+  "landing.pricing_note": "Płatne plany nie są jeszcze dostępne — w wersji alfa Orqacel jest bezpłatny.",
+  "landing.footer_note": "Orqacel — przestrzeń pracy dla freelancerów i małych firm usługowych.",
   "landing.footer_rights": "Wszelkie prawa zastrzeżone.",
   "landing.lang_note": "Dostępne w 11 językach",
 

@@ -22,7 +22,7 @@ import { QUOTATION_STATUS } from "@/lib/statusMeta";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 export const Route = createFileRoute("/_authed/quotations/$quotationId")({
-  head: () => ({ meta: [{ title: "Taskivo — Quotation" }] }),
+  head: () => ({ meta: [{ title: "Orqacel — Quotation" }] }),
   component: QuotationDetailPage,
 });
 

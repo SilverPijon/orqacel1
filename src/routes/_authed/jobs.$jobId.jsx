@@ -17,7 +17,7 @@ import { JOB_PRIORITY, JOB_STATUS } from "@/lib/statusMeta";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 export const Route = createFileRoute("/_authed/jobs/$jobId")({
-  head: () => ({ meta: [{ title: "Taskivo — Job" }] }),
+  head: () => ({ meta: [{ title: "Orqacel — Job" }] }),
   component: JobDetailPage,
 });
 

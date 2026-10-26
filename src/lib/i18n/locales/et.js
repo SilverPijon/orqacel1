@@ -1,5 +1,5 @@
 export default {
-  "app.name": "Taskivo",
+  "app.name": "Orqacel",
   "app.tagline": "Juhi oma teenindusettevõtet ühes kohas",
 
   "nav.dashboard": "Töölaud",
@@ -62,7 +62,7 @@ export default {
   "auth.sign_in": "Logi sisse",
   "auth.sign_up": "Loo konto",
   "auth.sign_in_title": "Tere tulemast tagasi",
-  "auth.sign_in_subtitle": "Logi sisse oma Taskivo tööruumi",
+  "auth.sign_in_subtitle": "Logi sisse oma Orqacel tööruumi",
   "auth.sign_up_title": "Loo oma konto",
   "auth.sign_up_subtitle": "Alusta klientide, pakkumiste ja tööde haldamist",
   "auth.email": "E-post",
@@ -97,12 +97,12 @@ export default {
   "onboarding.company_name": "Ettevõtte nimi",
   "onboarding.create": "Loo ettevõte",
   "onboarding.creating": "Loon...",
-  "onboarding.welcome": "Tere tulemast Taskivosse",
+  "onboarding.welcome": "Tere tulemast, Orqacel",
   "onboarding.welcome_subtitle": "Sinu tööruum on valmis. Alustame.",
   "onboarding.go_dashboard": "Töölauale",
   "onboarding.add_company": "Lisa teine ettevõte",
   "onboarding.no_company": "Sul pole veel ettevõtet",
-  "onboarding.no_company_desc": "Loo oma esimene ettevõte, et Taskivos tööd alustada.",
+  "onboarding.no_company_desc": "Loo oma esimene ettevõte, et Orqacelis tööd alustada.",
   "onboarding.country_hint": "Kasutatakse valuuta, maksude ja kuupäevade jaoks dokumentidel.",
 
   "dashboard.title": "Töölaud",
@@ -252,8 +252,8 @@ export default {
   "landing.pricing_title": "Lihtne hinnastamine",
   "landing.pricing_subtitle": "Alusta tasuta. Uuenda, kui ettevõte kasvab.",
   "landing.most_popular": "Populaarseim",
-  "landing.pricing_note": "Tasulised paketid pole veel saadaval — alfa versioonis on Taskivo tasuta.",
-  "landing.footer_note": "Taskivo — tööruum vabakutselistele ja väikestele teenindusettevõtetele.",
+  "landing.pricing_note": "Tasulised paketid pole veel saadaval — alfa versioonis on Orqacel tasuta.",
+  "landing.footer_note": "Orqacel — tööruum vabakutselistele ja väikestele teenindusettevõtetele.",
   "landing.footer_rights": "Kõik õigused kaitstud.",
   "landing.lang_note": "Saadaval 11 keeles",
 

@@ -13,7 +13,7 @@ import { COUNTRY_CODES, CURRENCIES, TIMEZONES, countryLabel } from "@/lib/consta
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 export const Route = createFileRoute("/_authed/onboarding")({
-  head: () => ({ meta: [{ title: "Taskivo — Company setup" }] }),
+  head: () => ({ meta: [{ title: "Orqacel — Company setup" }] }),
   component: OnboardingPage,
 });
 

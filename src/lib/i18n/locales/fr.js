@@ -1,5 +1,5 @@
 export default {
-  "app.name": "Taskivo",
+  "app.name": "Orqacel",
   "app.tagline": "Gérez votre activité de services en un seul endroit",
 
   "nav.dashboard": "Tableau de bord",
@@ -62,7 +62,7 @@ export default {
   "auth.sign_in": "Se connecter",
   "auth.sign_up": "Créer un compte",
   "auth.sign_in_title": "Bon retour",
-  "auth.sign_in_subtitle": "Connectez-vous à votre espace Taskivo",
+  "auth.sign_in_subtitle": "Connectez-vous à votre espace Orqacel",
   "auth.sign_up_title": "Créez votre compte",
   "auth.sign_up_subtitle": "Commencez à gérer clients, devis et interventions",
   "auth.email": "E-mail",
@@ -97,12 +97,12 @@ export default {
   "onboarding.company_name": "Nom de l'entreprise",
   "onboarding.create": "Créer l'entreprise",
   "onboarding.creating": "Création...",
-  "onboarding.welcome": "Bienvenue sur Taskivo",
+  "onboarding.welcome": "Bienvenue sur Orqacel",
   "onboarding.welcome_subtitle": "Votre espace est prêt. Commençons.",
   "onboarding.go_dashboard": "Aller au tableau de bord",
   "onboarding.add_company": "Ajouter une autre entreprise",
   "onboarding.no_company": "Vous n'avez pas encore d'entreprise",
-  "onboarding.no_company_desc": "Créez votre première entreprise pour commencer avec Taskivo.",
+  "onboarding.no_company_desc": "Créez votre première entreprise pour commencer avec Orqacel.",
   "onboarding.country_hint": "Utilisé pour la devise, les taxes et les dates de vos documents.",
 
   "dashboard.title": "Tableau de bord",
@@ -252,8 +252,8 @@ export default {
   "landing.pricing_title": "Tarifs simples",
   "landing.pricing_subtitle": "Commencez gratuitement. Évoluez quand votre activité grandit.",
   "landing.most_popular": "Le plus populaire",
-  "landing.pricing_note": "Les forfaits payants ne sont pas encore disponibles — Taskivo est gratuit pendant l'alpha.",
-  "landing.footer_note": "Taskivo — l'espace de travail des indépendants et des petites entreprises de services.",
+  "landing.pricing_note": "Les forfaits payants ne sont pas encore disponibles — Orqacel est gratuit pendant l'alpha.",
+  "landing.footer_note": "Orqacel — l'espace de travail des indépendants et des petites entreprises de services.",
   "landing.footer_rights": "Tous droits réservés.",
   "landing.lang_note": "Disponible en 11 langues",
 

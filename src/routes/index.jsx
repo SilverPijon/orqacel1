@@ -8,11 +8,11 @@ import LandingFooter from "@/components/landing/LandingFooter";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Taskivo — Clients, quotations and jobs for service businesses" },
+      { title: "Orqacel — Clients, quotations and jobs for service businesses" },
       {
         name: "description",
         content:
-          "Taskivo is the workspace for freelancers and small service businesses: manage clients, create quotations with line items and track jobs — in 11 languages.",
+          "Orqacel is the workspace for freelancers and small service businesses: manage clients, create quotations with line items and track jobs — in 11 languages.",
       },
     ],
   }),

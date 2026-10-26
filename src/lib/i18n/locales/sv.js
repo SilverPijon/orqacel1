@@ -1,5 +1,5 @@
 export default {
-  "app.name": "Taskivo",
+  "app.name": "Orqacel",
   "app.tagline": "Driv din serviceverksamhet på ett ställe",
 
   "nav.dashboard": "Översikt",
@@ -62,7 +62,7 @@ export default {
   "auth.sign_in": "Logga in",
   "auth.sign_up": "Skapa konto",
   "auth.sign_in_title": "Välkommen tillbaka",
-  "auth.sign_in_subtitle": "Logga in i din Taskivo-arbetsyta",
+  "auth.sign_in_subtitle": "Logga in i din Orqacel-arbetsyta",
   "auth.sign_up_title": "Skapa ditt konto",
   "auth.sign_up_subtitle": "Börja hantera kunder, offerter och jobb",
   "auth.email": "E-post",
@@ -97,12 +97,12 @@ export default {
   "onboarding.company_name": "Företagsnamn",
   "onboarding.create": "Skapa företag",
   "onboarding.creating": "Skapar...",
-  "onboarding.welcome": "Välkommen till Taskivo",
+  "onboarding.welcome": "Välkommen till Orqacel",
   "onboarding.welcome_subtitle": "Din arbetsyta är redo. Nu börjar vi.",
   "onboarding.go_dashboard": "Till översikten",
   "onboarding.add_company": "Lägg till ett företag till",
   "onboarding.no_company": "Du har inget företag ännu",
-  "onboarding.no_company_desc": "Skapa ditt första företag för att börja arbeta i Taskivo.",
+  "onboarding.no_company_desc": "Skapa ditt första företag för att börja arbeta i Orqacel.",
   "onboarding.country_hint": "Används för valuta, skatt och datum i dokument.",
 
   "dashboard.title": "Översikt",
@@ -252,8 +252,8 @@ export default {
   "landing.pricing_title": "Enkel prissättning",
   "landing.pricing_subtitle": "Börja gratis. Uppgradera när verksamheten växer.",
   "landing.most_popular": "Populärast",
-  "landing.pricing_note": "Betalplaner är inte tillgängliga ännu — Taskivo är gratis i alfa.",
-  "landing.footer_note": "Taskivo — arbetsytan för frilansare och små serviceföretag.",
+  "landing.pricing_note": "Betalplaner är inte tillgängliga ännu — Orqacel är gratis i alfa.",
+  "landing.footer_note": "Orqacel — arbetsytan för frilansare och små serviceföretag.",
   "landing.footer_rights": "Alla rättigheter förbehållna.",
   "landing.lang_note": "Tillgängligt på 11 språk",
 

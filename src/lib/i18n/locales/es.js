@@ -1,5 +1,5 @@
 export default {
-  "app.name": "Taskivo",
+  "app.name": "Orqacel",
   "app.tagline": "Gestiona tu negocio de servicios en un solo lugar",
 
   "nav.dashboard": "Panel",
@@ -62,7 +62,7 @@ export default {
   "auth.sign_in": "Iniciar sesión",
   "auth.sign_up": "Crear cuenta",
   "auth.sign_in_title": "Bienvenido de nuevo",
-  "auth.sign_in_subtitle": "Inicia sesión en tu espacio Taskivo",
+  "auth.sign_in_subtitle": "Inicia sesión en tu espacio Orqacel",
   "auth.sign_up_title": "Crea tu cuenta",
   "auth.sign_up_subtitle": "Empieza a gestionar clientes, presupuestos y trabajos",
   "auth.email": "Correo",
@@ -97,12 +97,12 @@ export default {
   "onboarding.company_name": "Nombre de la empresa",
   "onboarding.create": "Crear empresa",
   "onboarding.creating": "Creando...",
-  "onboarding.welcome": "Te damos la bienvenida a Taskivo",
+  "onboarding.welcome": "Te damos la bienvenida a Orqacel",
   "onboarding.welcome_subtitle": "Tu espacio está listo. Empecemos.",
   "onboarding.go_dashboard": "Ir al panel",
   "onboarding.add_company": "Añadir otra empresa",
   "onboarding.no_company": "Todavía no tienes una empresa",
-  "onboarding.no_company_desc": "Crea tu primera empresa para empezar a trabajar en Taskivo.",
+  "onboarding.no_company_desc": "Crea tu primera empresa para empezar a trabajar en Orqacel.",
   "onboarding.country_hint": "Se usa para la moneda, los impuestos y las fechas de tus documentos.",
 
   "dashboard.title": "Panel",
@@ -252,8 +252,8 @@ export default {
   "landing.pricing_title": "Precios sencillos",
   "landing.pricing_subtitle": "Empieza gratis. Mejora cuando tu negocio crezca.",
   "landing.most_popular": "Más popular",
-  "landing.pricing_note": "Los planes de pago aún no están disponibles — Taskivo es gratis durante la alfa.",
-  "landing.footer_note": "Taskivo — el espacio de trabajo para autónomos y pequeñas empresas de servicios.",
+  "landing.pricing_note": "Los planes de pago aún no están disponibles — Orqacel es gratis durante la alfa.",
+  "landing.footer_note": "Orqacel — el espacio de trabajo para autónomos y pequeñas empresas de servicios.",
   "landing.footer_rights": "Todos los derechos reservados.",
   "landing.lang_note": "Disponible en 11 idiomas",
 

@@ -7,7 +7,7 @@ import AccountPanel from "@/components/settings/AccountPanel";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 export const Route = createFileRoute("/_authed/settings")({
-  head: () => ({ meta: [{ title: "Taskivo — Settings" }] }),
+  head: () => ({ meta: [{ title: "Orqacel — Settings" }] }),
   component: SettingsPage,
 });
 

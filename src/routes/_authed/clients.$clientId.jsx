@@ -19,7 +19,7 @@ import { JOB_STATUS, QUOTATION_STATUS } from "@/lib/statusMeta";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 export const Route = createFileRoute("/_authed/clients/$clientId")({
-  head: () => ({ meta: [{ title: "Taskivo — Client" }] }),
+  head: () => ({ meta: [{ title: "Orqacel — Client" }] }),
   component: ClientDetailPage,
 });
 

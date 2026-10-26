@@ -16,7 +16,7 @@ import { deleteQuotation, listQuotations } from "@/lib/quotations-fns";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 export const Route = createFileRoute("/_authed/quotations/")({
-  head: () => ({ meta: [{ title: "Taskivo — Quotations" }] }),
+  head: () => ({ meta: [{ title: "Orqacel — Quotations" }] }),
   component: QuotationsPage,
 });
 

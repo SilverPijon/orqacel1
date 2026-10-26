@@ -1,5 +1,5 @@
 export default {
-  "app.name": "Taskivo",
+  "app.name": "Orqacel",
   "app.tagline": "Führen Sie Ihr Servicegeschäft an einem Ort",
 
   "nav.dashboard": "Übersicht",
@@ -62,7 +62,7 @@ export default {
   "auth.sign_in": "Anmelden",
   "auth.sign_up": "Konto erstellen",
   "auth.sign_in_title": "Willkommen zurück",
-  "auth.sign_in_subtitle": "Melden Sie sich in Ihrem Taskivo-Arbeitsbereich an",
+  "auth.sign_in_subtitle": "Melden Sie sich in Ihrem Orqacel-Arbeitsbereich an",
   "auth.sign_up_title": "Erstellen Sie Ihr Konto",
   "auth.sign_up_subtitle": "Verwalten Sie Kunden, Angebote und Aufträge",
   "auth.email": "E-Mail",
@@ -97,12 +97,12 @@ export default {
   "onboarding.company_name": "Firmenname",
   "onboarding.create": "Unternehmen erstellen",
   "onboarding.creating": "Wird erstellt...",
-  "onboarding.welcome": "Willkommen bei Taskivo",
+  "onboarding.welcome": "Willkommen bei Orqacel",
   "onboarding.welcome_subtitle": "Ihr Arbeitsbereich ist bereit. Los geht's.",
   "onboarding.go_dashboard": "Zur Übersicht",
   "onboarding.add_company": "Weiteres Unternehmen hinzufügen",
   "onboarding.no_company": "Sie haben noch kein Unternehmen",
-  "onboarding.no_company_desc": "Erstellen Sie Ihr erstes Unternehmen, um mit Taskivo zu arbeiten.",
+  "onboarding.no_company_desc": "Erstellen Sie Ihr erstes Unternehmen, um mit Orqacel zu arbeiten.",
   "onboarding.country_hint": "Wird für Währung, Steuern und Datumsangaben in Dokumenten verwendet.",
 
   "dashboard.title": "Übersicht",
@@ -252,8 +252,8 @@ export default {
   "landing.pricing_title": "Einfache Preise",
   "landing.pricing_subtitle": "Kostenlos starten. Upgrade, wenn Ihr Geschäft wächst.",
   "landing.most_popular": "Am beliebtesten",
-  "landing.pricing_note": "Kostenpflichtige Tarife sind noch nicht verfügbar — Taskivo ist in der Alpha kostenlos.",
-  "landing.footer_note": "Taskivo — der Arbeitsbereich für Freelancer und kleine Servicebetriebe.",
+  "landing.pricing_note": "Kostenpflichtige Tarife sind noch nicht verfügbar — Orqacel ist in der Alpha kostenlos.",
+  "landing.footer_note": "Orqacel — der Arbeitsbereich für Freelancer und kleine Servicebetriebe.",
   "landing.footer_rights": "Alle Rechte vorbehalten.",
   "landing.lang_note": "In 11 Sprachen verfügbar",
 

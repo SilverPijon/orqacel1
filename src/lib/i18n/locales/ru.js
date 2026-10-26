@@ -1,5 +1,5 @@
 export default {
-  "app.name": "Taskivo",
+  "app.name": "Orqacel",
   "app.tagline": "Управляйте сервисным бизнесом в одном месте",
 
   "nav.dashboard": "Панель",
@@ -62,7 +62,7 @@ export default {
   "auth.sign_in": "Войти",
   "auth.sign_up": "Создать аккаунт",
   "auth.sign_in_title": "С возвращением",
-  "auth.sign_in_subtitle": "Войдите в своё рабочее пространство Taskivo",
+  "auth.sign_in_subtitle": "Войдите в своё рабочее пространство Orqacel",
   "auth.sign_up_title": "Создайте аккаунт",
   "auth.sign_up_subtitle": "Начните управлять клиентами, предложениями и работами",
   "auth.email": "Эл. почта",
@@ -97,12 +97,12 @@ export default {
   "onboarding.company_name": "Название компании",
   "onboarding.create": "Создать компанию",
   "onboarding.creating": "Создание...",
-  "onboarding.welcome": "Добро пожаловать в Taskivo",
+  "onboarding.welcome": "Добро пожаловать в Orqacel",
   "onboarding.welcome_subtitle": "Ваше рабочее пространство готово. Начнём.",
   "onboarding.go_dashboard": "Перейти к панели",
   "onboarding.add_company": "Добавить другую компанию",
   "onboarding.no_company": "У вас пока нет компании",
-  "onboarding.no_company_desc": "Создайте первую компанию, чтобы начать работу в Taskivo.",
+  "onboarding.no_company_desc": "Создайте первую компанию, чтобы начать работу в Orqacel.",
   "onboarding.country_hint": "Используется для валюты, налогов и дат в документах.",
 
   "dashboard.title": "Панель",
@@ -252,8 +252,8 @@ export default {
   "landing.pricing_title": "Простые тарифы",
   "landing.pricing_subtitle": "Начните бесплатно. Обновитесь, когда бизнес вырастет.",
   "landing.most_popular": "Самый популярный",
-  "landing.pricing_note": "Платные тарифы пока недоступны — в альфа-версии Taskivo бесплатен.",
-  "landing.footer_note": "Taskivo — рабочее пространство для фрилансеров и небольших сервисных компаний.",
+  "landing.pricing_note": "Платные тарифы пока недоступны — в альфа-версии Orqacel бесплатен.",
+  "landing.footer_note": "Orqacel — рабочее пространство для фрилансеров и небольших сервисных компаний.",
   "landing.footer_rights": "Все права защищены.",
   "landing.lang_note": "Доступно на 11 языках",
 

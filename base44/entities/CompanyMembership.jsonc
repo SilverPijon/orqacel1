@@ -10,7 +10,7 @@
     },
     "user_id": {
       "type": "string",
-      "description": "Set once the invited person has a Taskivo account"
+      "description": "Set once the invited person has an Orqacel account"
     },
     "user_email": {
       "type": "string"
