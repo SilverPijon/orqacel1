@@ -17,7 +17,11 @@ import {
   inviteExpiresAt,
   inviteExpiryIso,
 } from "@/lib/invitations.server";
-import { assertInviteAllowed, assertResendAllowed } from "@/lib/invite-limits.server";
+import {
+  assertInviteAllowed,
+  assertResendAllowed,
+  assertSenderTrusted,
+} from "@/lib/invite-limits.server";
 
 const InviteInput = z.object({
   email: z.string().email().max(160),
@@ -141,14 +145,16 @@ export const inviteMember = createServerFn({ method: "POST" })
       // declined / revoked / expired rows are superseded by a fresh invitation below.
     }
 
-    // Bounds on how much mail this flow can produce. Checked before the row is written and
-    // before anything is sent, so a blocked invitation leaves no trace.
+    const person = first(await service.entities.User.filter({ email }));
+
+    // Who may send mail out of the app's domain, and how much of it. Both are checked before
+    // the row is written and before anything is sent, so a blocked invitation leaves no trace.
+    const sender = await readUserRecord(service, session.user.id);
+    assertSenderTrusted(sender, { recipientIsRegistered: Boolean(person) });
     await assertInviteAllowed(service, {
       companyId: session.activeCompany.id,
       userId: session.user.id,
     });
-
-    const person = first(await service.entities.User.filter({ email }));
     const token = await issueToken();
     const now = new Date().toISOString();
     const expiresAt = inviteExpiryIso();
@@ -179,7 +185,7 @@ export const inviteMember = createServerFn({ method: "POST" })
       email,
       companyName: session.activeCompany.name,
       role: data.role,
-      inviterName: session.user.full_name,
+      inviterEmail: session.user.email,
       token,
       expiresAt,
       needsAccountInvite: !person,
@@ -197,6 +203,12 @@ export const resendInvitation = createServerFn({ method: "POST" })
       data.membership_id,
     );
     assertResendAllowed(membership);
+
+    // A resend mails the same address again, so it passes the same trust boundary as a first
+    // invitation: a confirmed, settled sender account.
+    const sender = await readUserRecord(service, session.user.id);
+    const person = first(await service.entities.User.filter({ email: membership.user_email }));
+    assertSenderTrusted(sender, { recipientIsRegistered: Boolean(person) });
 
     const token = await issueToken();
     const now = new Date().toISOString();
@@ -216,10 +228,12 @@ export const resendInvitation = createServerFn({ method: "POST" })
       email: membership.user_email,
       companyName: session.activeCompany.name,
       role: membership.role,
-      inviterName: session.user.full_name,
+      inviterEmail: session.user.email,
       token,
       expiresAt,
-      needsAccountInvite: !membership.user_id,
+      // Decided on the address's current account status, not on what the row recorded when
+      // it was created: someone who has since registered must not be invited a second time.
+      needsAccountInvite: !person,
     });
 
     return { id: membership.id, status: "pending", expires_at: expiresAt, ...delivery };

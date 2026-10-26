@@ -15,7 +15,12 @@ import { invitationState } from "@/lib/invitations.server";
 // A small team app: far above real use, far below abuse.
 export const MAX_PENDING_PER_COMPANY = 25;
 export const MAX_INVITES_PER_DAY = 20;
+// One budget for the whole app, so the per-account caps cannot be multiplied by registering
+// further accounts: this is the ceiling on how much mail the app can produce in a day.
+export const MAX_INVITES_PER_DAY_APP = 50;
 export const RESEND_COOLDOWN_MINUTES = 60;
+// How long an account must have existed before it may mail an address with no account here.
+export const NEW_ACCOUNT_WAIT_HOURS = 24;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -24,8 +29,37 @@ function withinWindow(value, windowMs) {
   return Number.isFinite(at) && Date.now() - at < windowMs;
 }
 
+// Who may send mail out of the app's domain at all: only an account whose own address the
+// platform has confirmed, and only after that account has settled, can reach an address that
+// has no account here. Inviting someone who is already an Orqacel user stays available
+// immediately -- that person is reachable through the platform anyway, and is not a stranger.
+export function assertSenderTrusted(sender, { recipientIsRegistered }) {
+  if (sender?.is_verified === false) {
+    throw httpError(403, "Verify your email address before inviting people", "SENDER_UNVERIFIED");
+  }
+  if (recipientIsRegistered) return;
+
+  const created = Date.parse(sender?.created_date || "");
+  if (Number.isFinite(created) && Date.now() - created < NEW_ACCOUNT_WAIT_HOURS * 60 * 60 * 1000) {
+    throw httpError(
+      403,
+      "New accounts can invite existing Orqacel users right away. Inviting an address that has no account yet unlocks 24 hours after sign-up.",
+      "SENDER_TOO_NEW",
+    );
+  }
+}
+
 // Called before a new invitation row is written or emailed.
 export async function assertInviteAllowed(service, { companyId, userId }) {
+  // The app-wide budget comes first: it is the one ceiling that cannot be worked around by
+  // creating more companies, or more accounts.
+  const appToday = await service.entities.CompanyMembership.count({
+    invited_at: { $gte: new Date(Date.now() - DAY_MS).toISOString() },
+  });
+  if (appToday >= MAX_INVITES_PER_DAY_APP) {
+    throw httpError(429, "Daily invitation limit reached for Orqacel", "INVITE_LIMIT");
+  }
+
   const companyRows = asArray(
     await service.entities.CompanyMembership.filter({ company_id: companyId }),
   );

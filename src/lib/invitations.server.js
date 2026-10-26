@@ -94,7 +94,7 @@ export function safeEmailText(value, maxLength = 60) {
 // is told what happened, and the invitation can be resent.
 export async function deliverInvitation(
   context,
-  { email, companyName, role, inviterName, token, expiresAt, needsAccountInvite },
+  { email, companyName, role, inviterEmail, token, expiresAt, needsAccountInvite },
 ) {
   const client = context.getBase44();
   const service = client.asServiceRole;
@@ -116,10 +116,12 @@ export async function deliverInvitation(
       template_name: INVITE_EMAIL_TEMPLATE,
       category: "transactional",
       variables: {
-        // Only text the company itself owns reaches the email, cleaned and capped. The
-        // invitee's own name is never taken from what the inviter typed, and the role, the
-        // accept link and the expiry date are all produced server-side.
-        inviter_name: safeEmailText(inviterName) || "An Orqacel member",
+        // The sender is identified by their account address, which the platform verifies for
+        // them -- never by a free-text display name, so no caller chooses the wording that
+        // identifies them. The company name is cleaned and capped, the invitee's own name is
+        // never taken from what the inviter typed, and the role, the accept link and the
+        // expiry date are all produced server-side.
+        inviter_email: safeEmailText(inviterEmail, 120) || "An Orqacel member",
         company_name: safeEmailText(companyName) || "a company",
         role_label: roleLabel(role),
         accept_url: inviteLink(token.raw),
