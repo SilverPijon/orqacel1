@@ -30,13 +30,47 @@
     "status": {
       "type": "string",
       "enum": [
-        "invited",
-        "active"
+        "pending",
+        "active",
+        "declined",
+        "expired",
+        "revoked",
+        "invited"
       ],
-      "default": "invited"
+      "default": "pending",
+      "description": "Only 'active' means an accepted membership and the only state that grants access to company data. 'invited' is kept for rows created before the invitation lifecycle and is treated as pending."
     },
     "invited_by_id": {
-      "type": "string"
+      "type": "string",
+      "description": "User id of the person who sent the invitation"
+    },
+    "invited_by_name": {
+      "type": "string",
+      "description": "Display name of the inviter at the time of the invitation"
+    },
+    "invited_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the invitation was created"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Invitations expire 7 days after they are created or resent"
+    },
+    "last_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the invitation email was last sent"
+    },
+    "responded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the invitee accepted or declined"
+    },
+    "token_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of the single-use invitation token. The raw token only ever appears in the invitation email."
     }
   },
   "required": [

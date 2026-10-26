@@ -11,6 +11,7 @@ import {
   syncUserCompanies,
   unique,
 } from "@/lib/tenant.server";
+import { invitationState, inviteExpiresAt } from "@/lib/invitations.server";
 
 const COMPANY_PROFILE = {
   legal_name: z.string().max(160).optional(),
@@ -127,54 +128,12 @@ export const listMembers = createServerFn({ method: "GET" })
       user_email: membership.user_email,
       full_name: membership.full_name || "",
       role: membership.role,
-      status: membership.status,
+      status: invitationState(membership),
+      invited_at: membership.invited_at || membership.created_date || null,
+      expires_at: inviteExpiresAt(membership),
+      invited_by_name: membership.invited_by_name || "",
       is_me: membership.user_id === session.user.id,
     }));
-  });
-
-export const addMember = createServerFn({ method: "POST" })
-  .middleware([requireUser])
-  .validator(
-    z.object({
-      email: z.string().email().max(160),
-      role: z.enum(["admin", "member"]),
-      full_name: z.string().max(120).optional(),
-    }),
-  )
-  .handler(async ({ data, context }) => {
-    const session = await requireCompanyContext(context, "admin");
-    const service = context.getBase44().asServiceRole;
-    const callerRole = session.activeCompany.role;
-
-    if (data.role === "admin" && !isOwner(callerRole)) {
-      throw httpError(403, "Only the company owner can add admins", "OWNER_ONLY");
-    }
-
-    const email = data.email.trim().toLowerCase();
-    const existing = asArray(
-      await service.entities.CompanyMembership.filter({
-        company_id: session.activeCompany.id,
-        user_email: email,
-      }),
-    )[0];
-    if (existing) throw httpError(409, "That person is already a member of this company", "MEMBER_EXISTS");
-
-    const person = asArray(await service.entities.User.filter({ email }))[0] || null;
-
-    const membership = await service.entities.CompanyMembership.create({
-      company_id: session.activeCompany.id,
-      company_name: session.activeCompany.name,
-      user_id: person?.id || null,
-      user_email: email,
-      full_name: data.full_name?.trim() || person?.full_name || "",
-      role: data.role,
-      status: person ? "active" : "invited",
-      invited_by_id: session.user.id,
-    });
-
-    if (person) await syncUserCompanies(service, person.id);
-
-    return { id: membership.id };
   });
 
 export const updateMemberRole = createServerFn({ method: "POST" })
@@ -195,6 +154,11 @@ export const updateMemberRole = createServerFn({ method: "POST" })
     }
     if (data.role === "admin" && !isOwner(session.activeCompany.role)) {
       throw httpError(403, "Only the company owner can assign admins", "OWNER_ONLY");
+    }
+
+    const state = invitationState(membership);
+    if (state !== "pending" && state !== "active") {
+      throw httpError(409, "This membership is no longer active", "NOT_MANAGEABLE");
     }
 
     await service.entities.CompanyMembership.update(membership.id, { role: data.role });

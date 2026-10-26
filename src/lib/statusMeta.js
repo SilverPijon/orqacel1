@@ -33,6 +33,10 @@ export const ROLE = {
 
 export const MEMBERSHIP_STATUS = {
   active: { key: "clients.active", tone: "success" },
+  pending: { key: "settings.pending", tone: "warning" },
+  declined: { key: "settings.declined", tone: "muted" },
+  expired: { key: "settings.expired", tone: "danger" },
+  revoked: { key: "settings.revoked", tone: "danger" },
   invited: { key: "settings.invited", tone: "warning" },
 };
 

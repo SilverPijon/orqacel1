@@ -48,23 +48,8 @@ export async function readUserRecord(service, userId) {
   return rows[0] || null;
 }
 
-// Memberships added by email are activated the first time that person signs in.
-export async function claimInvitations(service, user) {
-  const email = (user.email || "").toLowerCase();
-  if (!email) return;
-  const invited = asArray(
-    await service.entities.CompanyMembership.filter({ user_email: email, status: "invited" }),
-  ).filter((membership) => membership.user_id !== user.id);
-  if (!invited.length) return;
-  await service.entities.CompanyMembership.bulkUpdate(
-    invited.map((membership) => ({
-      id: membership.id,
-      user_id: user.id,
-      status: "active",
-      full_name: membership.full_name || user.full_name || "",
-    })),
-  );
-}
+// Invitations are no longer activated on sign-in: a pending invitation grants nothing
+// until its invitee accepts it explicitly (see src/lib/invitations-fns.js).
 
 // Keeps the locked company list on the user in sync with their active memberships.
 export async function syncUserCompanies(service, userId) {
@@ -106,7 +91,6 @@ export async function getActiveSession(context) {
   const service = context.getBase44().asServiceRole;
   const user = context.user;
 
-  await claimInvitations(service, user);
   const { companyIds, activeCompanyId } = await syncUserCompanies(service, user.id);
 
   const memberships = dedupeMemberships(

@@ -1,0 +1,76 @@
+<mjml>
+  <mj-head>
+    <mj-title>{{inviter_name}} invited you to {{company_name}}</mj-title>
+    <mj-preview>Join {{company_name}} on Orqacel as {{role_label}}. This invitation expires on {{expires_at}}.</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="Arial, Helvetica, Arial, sans-serif" />
+      <mj-section background-color="#f5f5f5" padding="0 36px" />
+      <mj-column padding="0" />
+      <mj-text color="#0a0a0a" font-size="15px" line-height="1.6" padding="0" />
+      <mj-button background-color="#0a0a0a" color="#ffffff" border-radius="6px" font-size="15px" font-weight="700" inner-padding="14px 28px" padding="0" align="left" />
+      <mj-image padding="0" />
+      <mj-divider border-color="#e5e7eb" border-width="1px" padding="0" />
+      <mj-class name="h" font-family="Arial, Helvetica, Arial, sans-serif" font-weight="700" />
+      <mj-class name="label" font-size="11px" letter-spacing="2px" text-transform="uppercase" font-weight="700" color="#0a0a0a" />
+      <mj-class name="muted" color="#171717" />
+    </mj-attributes>
+    <mj-style>
+      @media (max-width:480px) { .hero-h div { font-size:32px !important; line-height:1.12 !important; } }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#ffffff" width="600px">
+    <mj-wrapper padding="28px 12px" background-color="#ffffff">
+      <mj-section background-color="#0a0a0a" padding="22px 36px" border-radius="6px 6px 0 0">
+        <mj-column>
+          <mj-image src="https://media.base44.com/images/public/6adf490c73051481ee750027/313e640b9_logo.png" alt="Orqacel" width="36px" align="center" padding="0 0 10px" />
+          <mj-text align="center" font-size="12px" letter-spacing="4px" font-weight="700" text-transform="uppercase" color="#ffffff">Orqacel</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section background-color="#0a0a0a" padding="52px 36px 48px">
+        <mj-column>
+          <mj-text font-size="11px" letter-spacing="3px" text-transform="uppercase" font-weight="700" color="#ffffff" align="left" padding="0 0 14px">Team invitation</mj-text>
+          <mj-text mj-class="h" css-class="hero-h" align="left" font-size="44px" line-height="1.06" color="#ffffff" padding="0 0 26px">Join {{company_name}}</mj-text>
+          <mj-button href="{{accept_url}}" align="left" background-color="#ffffff" color="#0a0a0a" inner-padding="15px 32px">Accept invitation</mj-button>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="44px 36px 12px">
+        <mj-column>
+          <mj-text font-size="17px" line-height="1.65" color="#171717">{{inviter_name}} invited you to join <strong>{{company_name}}</strong> on Orqacel as {{role_label}}. Accept the invitation to start working on clients, quotations and jobs with the team.</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="8px 28px 16px">
+        <mj-column padding="0 8px 16px" inner-background-color="#f5f5f5" inner-border-radius="6px">
+          <mj-text mj-class="label" padding="22px 20px 8px">Your role</mj-text>
+          <mj-text mj-class="h" font-size="20px" line-height="1.35" padding="0 20px 22px">{{role_label}}</mj-text>
+        </mj-column>
+        <mj-column padding="0 8px 16px" inner-background-color="#f5f5f5" inner-border-radius="6px">
+          <mj-text mj-class="label" padding="22px 20px 8px">Invitation expires</mj-text>
+          <mj-text mj-class="h" font-size="20px" line-height="1.35" padding="0 20px 22px">{{expires_at}}</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="8px 36px 8px">
+        <mj-column>
+          <mj-text mj-class="muted" font-size="14px" line-height="1.6">Sign in with the email address this invitation was sent to, otherwise you will not be able to accept it. The link can only be used once.</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section background-color="#0a0a0a" padding="44px 40px">
+        <mj-column>
+          <mj-text mj-class="h" font-size="22px" line-height="1.4" color="#ffffff" padding="0 0 22px">Ready to join {{company_name}}?</mj-text>
+          <mj-button href="{{accept_url}}" align="left" background-color="#ffffff" color="#0a0a0a" inner-padding="15px 32px">Accept invitation</mj-button>
+        </mj-column>
+      </mj-section>
+
+      <mj-section background-color="#0a0a0a" padding="30px 36px 34px" border-radius="0 0 6px 6px">
+        <mj-column>
+          <mj-text mj-class="h" align="center" font-size="18px" color="#ffffff" padding="0 0 8px">Orqacel</mj-text>
+          <mj-text align="center" font-size="12px" color="#ffffff">The workspace for freelancers and small service businesses.</mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+  </mj-body>
+</mjml>

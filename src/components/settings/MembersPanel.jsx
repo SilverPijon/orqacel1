@@ -9,15 +9,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import StatusBadge from "@/components/StatusBadge";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { useSession } from "@/lib/SessionContext";
-import { addMember, listMembers, removeMember, updateMemberRole } from "@/lib/tenant-fns";
+import { listMembers, removeMember, updateMemberRole } from "@/lib/tenant-fns";
+import { inviteMember } from "@/lib/invitations-fns";
 import { MEMBERSHIP_STATUS, ROLE } from "@/lib/statusMeta";
 import { useI18n } from "@/lib/i18n/I18nContext";
+
+const MANAGEABLE_STATUSES = ["pending", "active"];
 
 export default function MembersPanel() {
   const { t } = useI18n();
   const { activeCompany, permissions, refresh } = useSession();
   const fetchMembers = useServerFn(listMembers);
-  const addFn = useServerFn(addMember);
+  const inviteFn = useServerFn(inviteMember);
   const roleFn = useServerFn(updateMemberRole);
   const removeFn = useServerFn(removeMember);
 
@@ -39,12 +42,13 @@ export default function MembersPanel() {
     if (!email.trim()) return;
     setSaving(true);
     try {
-      await addFn({ data: { email: email.trim(), role } });
+      const result = await inviteFn({ data: { email: email.trim(), role } });
       setEmail("");
       setRole("member");
       await query.refetch();
       await refresh();
-      toast.success(t("settings.member_added"));
+      if (result?.email_sent) toast.success(t("settings.invitation_sent"));
+      else toast.warning(t("settings.invitation_saved_no_email"));
     } catch (error) {
       toast.error(error?.message || t("common.error"));
     } finally {
@@ -116,7 +120,11 @@ export default function MembersPanel() {
           </div>
         ) : (
           members.map((member) => {
-            const locked = !permissions.canManage || member.role === "owner" || member.is_me;
+            const locked =
+              !permissions.canManage ||
+              member.role === "owner" ||
+              member.is_me ||
+              !MANAGEABLE_STATUSES.includes(member.status);
             return (
               <div key={member.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">
@@ -127,8 +135,11 @@ export default function MembersPanel() {
                   <p className="truncate text-xs text-muted-foreground">{member.user_email}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {member.status === "invited" ? (
-                    <StatusBadge label={t("settings.invited")} tone={MEMBERSHIP_STATUS.invited.tone} />
+                  {member.status !== "active" && MEMBERSHIP_STATUS[member.status] ? (
+                    <StatusBadge
+                      label={t(MEMBERSHIP_STATUS[member.status].key)}
+                      tone={MEMBERSHIP_STATUS[member.status].tone}
+                    />
                   ) : null}
                   {member.role === "owner" || locked ? (
                     <StatusBadge label={t(ROLE[member.role].key)} tone={ROLE[member.role].tone} />
