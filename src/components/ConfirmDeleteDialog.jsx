@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
-export default function ConfirmDeleteDialog({ open, onOpenChange, title, description, onConfirm, pending }) {
+export default function ConfirmDeleteDialog({ open, onOpenChange, title, description, onConfirm, pending, confirmLabel }) {
   const { t } = useI18n();
 
   return (
@@ -28,7 +28,7 @@ export default function ConfirmDeleteDialog({ open, onOpenChange, title, descrip
             disabled={pending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {t("common.delete")}
+            {confirmLabel || t("common.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

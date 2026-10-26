@@ -1,33 +1,31 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Plus, UserMinus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import StatusBadge from "@/components/StatusBadge";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import InviteForm from "@/components/settings/InviteForm";
+import MemberRow from "@/components/settings/MemberRow";
+import InvitationRow from "@/components/settings/InvitationRow";
 import { useSession } from "@/lib/SessionContext";
 import { listMembers, removeMember, updateMemberRole } from "@/lib/tenant-fns";
-import { inviteMember } from "@/lib/invitations-fns";
-import { MEMBERSHIP_STATUS, ROLE } from "@/lib/statusMeta";
+import { resendInvitation, revokeInvitation } from "@/lib/invitations-fns";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
-const MANAGEABLE_STATUSES = ["pending", "active"];
-
+// Accepted members and not-yet-accepted invitations are listed separately: only the
+// first group has access to this company's data.
 export default function MembersPanel() {
   const { t } = useI18n();
   const { activeCompany, permissions, refresh } = useSession();
   const fetchMembers = useServerFn(listMembers);
-  const inviteFn = useServerFn(inviteMember);
   const roleFn = useServerFn(updateMemberRole);
   const removeFn = useServerFn(removeMember);
+  const resendFn = useServerFn(resendInvitation);
+  const revokeFn = useServerFn(revokeInvitation);
 
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("member");
-  const [saving, setSaving] = useState(false);
   const [pendingRemoval, setPendingRemoval] = useState(null);
+  const [pendingRevoke, setPendingRevoke] = useState(null);
+  const [busyId, setBusyId] = useState(null);
 
   const query = useQuery({
     queryKey: ["members", activeCompany?.id],
@@ -35,32 +33,19 @@ export default function MembersPanel() {
     enabled: Boolean(activeCompany?.id),
   });
 
-  const members = query.data || [];
+  const rows = query.data || [];
+  const members = rows.filter((row) => row.status === "active");
+  const invitations = rows.filter((row) => row.status !== "active");
 
-  const submit = async (event) => {
-    event.preventDefault();
-    if (!email.trim()) return;
-    setSaving(true);
-    try {
-      const result = await inviteFn({ data: { email: email.trim(), role } });
-      setEmail("");
-      setRole("member");
-      await query.refetch();
-      await refresh();
-      if (result?.email_sent) toast.success(t("settings.invitation_sent"));
-      else toast.warning(t("settings.invitation_saved_no_email"));
-    } catch (error) {
-      toast.error(error?.message || t("common.error"));
-    } finally {
-      setSaving(false);
-    }
+  const refreshAll = async () => {
+    await query.refetch();
+    await refresh();
   };
 
-  const changeRole = async (membershipId, nextRole) => {
+  const changeRole = async (membershipId, role) => {
     try {
-      await roleFn({ data: { membership_id: membershipId, role: nextRole } });
-      await query.refetch();
-      await refresh();
+      await roleFn({ data: { membership_id: membershipId, role } });
+      await refreshAll();
       toast.success(t("common.saved"));
     } catch (error) {
       toast.error(error?.message || t("common.error"));
@@ -72,9 +57,35 @@ export default function MembersPanel() {
     try {
       await removeFn({ data: { membership_id: pendingRemoval.id } });
       setPendingRemoval(null);
-      await query.refetch();
-      await refresh();
+      await refreshAll();
       toast.success(t("settings.member_removed"));
+    } catch (error) {
+      toast.error(error?.message || t("common.error"));
+    }
+  };
+
+  // Resending re-issues the invitation with a fresh single-use link and expiry.
+  const resend = async (invitation) => {
+    setBusyId(invitation.id);
+    try {
+      const result = await resendFn({ data: { membership_id: invitation.id } });
+      await refreshAll();
+      if (result?.email_sent) toast.success(t("settings.invitation_resent"));
+      else toast.warning(t("settings.invitation_saved_no_email"));
+    } catch (error) {
+      toast.error(error?.message || t("common.error"));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const confirmRevoke = async () => {
+    if (!pendingRevoke) return;
+    try {
+      await revokeFn({ data: { membership_id: pendingRevoke.id } });
+      setPendingRevoke(null);
+      await refreshAll();
+      toast.success(t("settings.invitation_revoked"));
     } catch (error) {
       toast.error(error?.message || t("common.error"));
     }
@@ -87,93 +98,59 @@ export default function MembersPanel() {
         <p className="mt-1 text-sm text-muted-foreground">{t("settings.members_desc")}</p>
       </header>
 
-      {permissions.canManage ? (
-        <form onSubmit={submit} className="mb-5 flex flex-col gap-2 sm:flex-row">
-          <Input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder={t("settings.member_email")}
-            className="sm:flex-1"
-            required
-          />
-          <Select value={role} onValueChange={setRole}>
-            <SelectTrigger className="sm:w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="member">{t("settings.role_member")}</SelectItem>
-              <SelectItem value="admin">{t("settings.role_admin")}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button type="submit" disabled={saving} className="gap-2">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            {t("settings.add_member")}
-          </Button>
-        </form>
-      ) : null}
+      {permissions.canManage ? <InviteForm onInvited={refreshAll} /> : null}
 
-      <div className="divide-y divide-border rounded-xl border border-border">
-        {query.isLoading ? (
-          <div className="grid place-items-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      {query.isLoading ? (
+        <div className="grid place-items-center py-8">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <>
+          <h3 className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {t("settings.active_members")}
+          </h3>
+          <div className="divide-y divide-border rounded-xl border border-border">
+            {members.map((member) => (
+              <MemberRow
+                key={member.id}
+                member={member}
+                locked={!permissions.canManage}
+                isOwner={permissions.isOwner}
+                onRoleChange={changeRole}
+                onRemove={
+                  permissions.canManage && member.role !== "owner" && !member.is_me
+                    ? setPendingRemoval
+                    : null
+                }
+              />
+            ))}
           </div>
-        ) : (
-          members.map((member) => {
-            const locked =
-              !permissions.canManage ||
-              member.role === "owner" ||
-              member.is_me ||
-              !MANAGEABLE_STATUSES.includes(member.status);
-            return (
-              <div key={member.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">
-                    {member.full_name || member.user_email}
-                    {member.is_me ? ` · ${t("settings.account")}` : ""}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">{member.user_email}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {member.status !== "active" && MEMBERSHIP_STATUS[member.status] ? (
-                    <StatusBadge
-                      label={t(MEMBERSHIP_STATUS[member.status].key)}
-                      tone={MEMBERSHIP_STATUS[member.status].tone}
-                    />
-                  ) : null}
-                  {member.role === "owner" || locked ? (
-                    <StatusBadge label={t(ROLE[member.role].key)} tone={ROLE[member.role].tone} />
-                  ) : (
-                    <Select
-                      value={member.role}
-                      onValueChange={(value) => changeRole(member.id, value)}
-                    >
-                      <SelectTrigger className="h-8 w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="member">{t("settings.role_member")}</SelectItem>
-                        <SelectItem value="admin">{t("settings.role_admin")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                  {permissions.canManage && member.role !== "owner" && !member.is_me ? (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => setPendingRemoval(member)}
-                      aria-label={t("settings.remove_member")}
-                    >
-                      <UserMinus className="h-4 w-4" />
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+
+          <h3 className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {t("settings.pending_invitations")}
+          </h3>
+          <div className="divide-y divide-border rounded-xl border border-border">
+            {invitations.length ? (
+              invitations.map((invitation) => (
+                <InvitationRow
+                  key={invitation.id}
+                  invitation={invitation}
+                  locked={!permissions.canManage}
+                  isOwner={permissions.isOwner}
+                  busy={busyId === invitation.id}
+                  onRoleChange={changeRole}
+                  onResend={resend}
+                  onRevoke={setPendingRevoke}
+                />
+              ))
+            ) : (
+              <p className="px-4 py-6 text-sm text-muted-foreground">
+                {t("settings.no_pending_invitations")}
+              </p>
+            )}
+          </div>
+        </>
+      )}
 
       {permissions.canManage ? (
         <p className="mt-3 text-xs text-muted-foreground">{t("settings.owner_locked")}</p>
@@ -185,6 +162,15 @@ export default function MembersPanel() {
         title={t("settings.remove_member")}
         description={t("settings.remove_member_desc")}
         onConfirm={confirmRemoval}
+      />
+
+      <ConfirmDeleteDialog
+        open={Boolean(pendingRevoke)}
+        onOpenChange={(open) => (open ? null : setPendingRevoke(null))}
+        title={t("settings.revoke_invitation")}
+        description={t("settings.revoke_invitation_desc")}
+        confirmLabel={t("settings.revoke_invitation")}
+        onConfirm={confirmRevoke}
       />
     </section>
   );

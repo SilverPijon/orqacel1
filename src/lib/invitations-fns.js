@@ -247,10 +247,14 @@ export const listMyInvitations = createServerFn({ method: "GET" })
     if (record && record.is_verified === false) return [];
 
     const rows = asArray(await service.entities.CompanyMembership.filter({ user_email: email }));
+    const order = { pending: 0, expired: 1, declined: 2, revoked: 3, active: 4 };
 
     return rows
+      // An accepted invitation is worth showing as already used; a membership that was
+      // never an invitation (owner onboarding, rows from before the lifecycle) is not.
+      .filter((membership) => invitationState(membership) !== "active" || Boolean(membership.responded_at))
       .map((membership) => ({ membership, state: invitationState(membership) }))
-      .filter(({ state }) => state === "pending" || state === "expired")
+      .sort((a, b) => (order[a.state] ?? 9) - (order[b.state] ?? 9))
       .map(({ membership, state }) => ({
         id: membership.id,
         company_id: membership.company_id,

@@ -19,7 +19,7 @@ export default function AppShell({ children }) {
         <aside className="hidden w-64 shrink-0 flex-col gap-4 bg-sidebar p-4 lg:flex">
           <div className="flex items-center gap-2 px-2 py-1">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary font-heading text-lg font-bold text-primary-foreground">
-              T
+              O
             </span>
             <span className="font-heading text-lg font-bold text-sidebar-foreground">{t("app.name")}</span>
           </div>
@@ -40,7 +40,7 @@ export default function AppShell({ children }) {
                   <SheetTitle className="sr-only">{t("nav.menu")}</SheetTitle>
                   <div className="flex items-center gap-2 px-2 py-1">
                     <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary font-heading text-lg font-bold text-primary-foreground">
-                      T
+                      O
                     </span>
                     <span className="font-heading text-lg font-bold text-sidebar-foreground">{t("app.name")}</span>
                   </div>
