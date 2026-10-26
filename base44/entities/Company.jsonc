@@ -75,19 +75,13 @@
       }
     },
     "create": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "created_by_id": "__app_users_may_not_write_companies__"
     },
     "update": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "created_by_id": "__app_users_may_not_write_companies__"
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "created_by_id": "__app_users_may_not_write_companies__"
     }
   }
 }

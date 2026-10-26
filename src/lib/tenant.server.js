@@ -16,6 +16,21 @@ export function unique(values) {
   return [...new Set(values.filter(Boolean))];
 }
 
+// A user has one membership per company. If extra rows ever appear for the same
+// company, the earliest one wins — a later row can then never be used to raise the
+// caller's role in that company. Client-side writes to CompanyMembership are closed
+// (editor-only rules), so the app's own server functions are the only writer.
+export function dedupeMemberships(memberships) {
+  const seen = new Set();
+  return [...memberships]
+    .sort((a, b) => String(a.created_date).localeCompare(String(b.created_date)))
+    .filter((membership) => {
+      if (seen.has(membership.company_id)) return false;
+      seen.add(membership.company_id);
+      return true;
+    });
+}
+
 export function roleRank(role) {
   return ROLE_RANK[role] || 0;
 }
@@ -94,8 +109,8 @@ export async function getActiveSession(context) {
   await claimInvitations(service, user);
   const { companyIds, activeCompanyId } = await syncUserCompanies(service, user.id);
 
-  const memberships = asArray(
-    await service.entities.CompanyMembership.filter({ user_id: user.id, status: "active" }),
+  const memberships = dedupeMemberships(
+    asArray(await service.entities.CompanyMembership.filter({ user_id: user.id, status: "active" })),
   );
   const companies = companyIds.length
     ? asArray(await service.entities.Company.filter({ id: { $in: companyIds } }))
