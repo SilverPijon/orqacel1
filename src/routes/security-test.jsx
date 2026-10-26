@@ -176,7 +176,7 @@ function SecurityTestPage() {
           ))}
           {result.canary?.performed ? (
             <p className="text-xs text-muted-foreground">
-              Because a protected-field write was accepted, one harmless changed value per field was written, read back and restored.
+              Each protected field was probed with the value it already held, then with a changed value. Anything that landed was read back and restored immediately.
             </p>
           ) : null}
           {result.stored === false ? (

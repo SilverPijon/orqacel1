@@ -78,10 +78,22 @@ export async function runSecurityCore(context, options = {}) {
   const originalActive = userRow.active_company_id || null;
   const originalRole = userRow.role || null;
   const restoreLog = [];
-  const restoreUserFields = async (fields) => {
-    const patch = { ...fields, _restore: true };
-    delete patch._restore;
-    await service.entities.User.update(me.id, patch);
+  // Restores go through the caller's own session first — the write path that provably
+  // works for this account — with the service role as a fallback. A refused restore is
+  // never swallowed: it is recorded and surfaces in the integrity section.
+  const writeBack = async (entity, id, patch) => {
+    try {
+      await caller.entities[entity].update(id, patch);
+      return "";
+    } catch (error) {
+      const first = short(error);
+      try {
+        await service.entities[entity].update(id, patch);
+        return first;
+      } catch (serviceError) {
+        return `${first} / ${short(serviceError)}`;
+      }
+    }
   };
 
   try {
@@ -99,7 +111,7 @@ export async function runSecurityCore(context, options = {}) {
       { name: "Client", label: "clients", id: clientB.id, filter: { company_id: companyB.id }, create: { company_id: companyB.id, name: "ATTACK client" }, update: { name: "ATTACK renamed" } },
       { name: "Quotation", label: "quotations", id: quotationB.id, filter: { company_id: companyB.id }, create: { company_id: companyB.id, number: "ATTACK-1" }, update: { number: "ATTACK-RENAMED" } },
       { name: "Job", label: "jobs", id: jobB.id, filter: { company_id: companyB.id }, create: { company_id: companyB.id, title: "ATTACK job" }, update: { title: "ATTACK renamed" } },
-      { name: "Company", label: "the other company record", id: companyB.id, filter: { id: companyB.id }, create: { name: "ATTACK company" }, update: { name: "ATTACK renamed company" } },
+      { name: "Company", label: "companies", id: companyB.id, filter: { id: companyB.id }, create: { name: "ATTACK company" }, update: { name: "ATTACK renamed company" } },
       {
         name: "CompanyMembership",
         label: "memberships",
@@ -154,134 +166,128 @@ export async function runSecurityCore(context, options = {}) {
       }
     }
 
-    // ---- test 1: protected fields (same value first, then harmless canary) --
-    const sameValue = {};
-    const probeSameValue = async (key, fn) => {
+    // ---- test 1: protected user fields (company list, active company, platform role) --
+    // Writing back the value the account already holds is a no-op, so on its own it
+    // cannot show a vulnerability: it is kept as a control proving the write path is
+    // live. The security question is whether a CHANGED value can be written, so each
+    // field is probed twice — same value, then a changed value — on both write paths.
+    const probeSameValue = async (fn) => {
       try {
         await fn();
-        sameValue[key] = { allowed: true, actual: "accepted" };
+        return "accepted (no-op)";
       } catch (error) {
-        sameValue[key] = { allowed: false, actual: `refused (${short(error)})` };
+        return `refused (${short(error)})`;
       }
     };
-    await probeSameValue("companyIds.entities", () => caller.entities.User.update(me.id, { company_ids: originalIds }));
-    await probeSameValue("activeCompany.entities", () => caller.entities.User.update(me.id, { active_company_id: originalActive }));
-    await probeSameValue("role.entities", () => caller.entities.User.update(me.id, { role: originalRole }));
-    await probeSameValue("companyIds.updateMe", () => caller.auth.updateMe({ company_ids: originalIds }));
-    await probeSameValue("activeCompany.updateMe", () => caller.auth.updateMe({ active_company_id: originalActive }));
-    await probeSameValue("role.updateMe", () => caller.auth.updateMe({ role: originalRole }));
 
-    const anythingAccepted = Object.values(sameValue).some((entry) => entry.allowed);
-    const canary = { performed: false, fields: {} };
-    if (anythingAccepted) {
-      canary.performed = true;
-      const canaryField = async (fieldName, payload, checkLanded, restorePayload, verifyRestored) => {
-        const entry = { wrote: false, landed: false, restored: null };
-        try {
-          await caller.entities.User.update(me.id, payload);
-          entry.wrote = true;
-        } catch (error) {
-          entry.wrote = false;
-          entry.note = short(error);
-          return entry;
-        }
-        try {
-          const after = a(await service.entities.User.filter({ id: me.id }))[0] || {};
-          entry.landed = Boolean(checkLanded(after));
-        } finally {
-          await service.entities.User.update(me.id, restorePayload);
-          const back = a(await service.entities.User.filter({ id: me.id }))[0] || {};
-          entry.restored = Boolean(verifyRestored(back));
-          if (!entry.restored) restoreLog.push(`canary restore failed: ${fieldName}`);
-        }
-        return entry;
-      };
-      canary.fields.activeCompany = await canaryField(
-        "active_company_id",
-        { active_company_id: BOGUS_ID },
-        (row) => row.active_company_id === BOGUS_ID,
-        { active_company_id: originalActive },
-        (row) => (row.active_company_id || null) === originalActive,
-      );
-      canary.fields.companyIds = await canaryField(
-        "company_ids",
-        { company_ids: [...originalIds, BOGUS_ID] },
-        (row) => (row.company_ids || []).includes(BOGUS_ID),
-        { company_ids: originalIds },
-        (row) => JSON.stringify(row.company_ids || []) === JSON.stringify(originalIds),
-      );
-      canary.fields.role = await canaryField(
-        "role",
-        { role: "admin" },
-        (row) => row.role === "admin" && originalRole !== "admin",
-        { role: originalRole },
-        (row) => (row.role || null) === originalRole,
-      );
-    }
-
-    const protectedChecks = [
+    const protectedFields = [
       {
-        label: "Write the account's own company list",
-        actual: sameValue["companyIds.entities"].actual,
-        pass: !sameValue["companyIds.entities"].allowed && !sameValue["companyIds.updateMe"].allowed,
+        key: "company_ids",
+        original: originalIds,
+        canary: [...originalIds, BOGUS_ID],
+        landed: (row) => (row.company_ids || []).includes(BOGUS_ID),
+        restored: (row) => JSON.stringify(row.company_ids || []) === JSON.stringify(originalIds),
+        checkLabel: "Change the account's own company list",
       },
       {
-        label: "Write the account's own active company",
-        actual: sameValue["activeCompany.entities"].actual,
-        pass: !sameValue["activeCompany.entities"].allowed && !sameValue["activeCompany.updateMe"].allowed,
+        key: "active_company_id",
+        original: originalActive,
+        canary: BOGUS_ID,
+        landed: (row) => row.active_company_id === BOGUS_ID,
+        restored: (row) => (row.active_company_id || null) === (originalActive || null),
+        checkLabel: "Change the account's own active company",
       },
       {
-        label: "Write the account's own platform role",
-        actual: sameValue["role.entities"].actual,
-        pass: !sameValue["role.entities"].allowed && !sameValue["role.updateMe"].allowed,
+        key: "role",
+        original: originalRole,
+        // Only ever attempted on an account below the highest platform role: the
+        // platform refuses role writes on the app owner, so it is never downgraded.
+        skip: originalRole === "admin",
+        skipNote: `not probed — this account already holds the highest platform role (${originalRole})`,
+        canary: "admin",
+        landed: (row) => row.role === "admin" && row.role !== originalRole,
+        restored: (row) => (row.role || null) === (originalRole || null),
+        checkLabel: "Change the account's own platform role",
       },
     ];
-    if (canary.performed) {
-      const restoredAll = canary.fields.companyIds.restored && canary.fields.activeCompany.restored && canary.fields.role.restored;
+
+    const attemptChange = async (spec, path, write) => {
+      const entry = { wrote: false, landed: false, restored: true };
+      try {
+        await write();
+        // eslint-disable-next-line no-unused-expressions
+        void 0;
+        entry.wrote = true;
+      } catch (error) {
+        entry.note = short(error);
+        return entry;
+      }
+      const after = a(await service.entities.User.filter({ id: me.id }))[0] || {};
+      entry.landed = Boolean(spec.landed(after));
+      if (entry.landed) {
+        await service.entities.User.update(me.id, { [spec.key]: spec.original });
+        const back = a(await service.entities.User.filter({ id: me.id }))[0] || {};
+        entry.restored = Boolean(spec.restored(back));
+        if (!entry.restored) restoreLog.push(`protected restore failed: ${spec.key} (${path})`);
+      }
+      return entry;
+    };
+
+    const canary = { performed: true, fields: {} };
+    const protectedChecks = [];
+    for (const spec of protectedFields) {
+      if (spec.skip) {
+        protectedChecks.push({ label: spec.checkLabel, actual: spec.skipNote, pass: true });
+        continue;
+      }
+      const sameValue = await probeSameValue(() => caller.entities.User.update(me.id, { [spec.key]: spec.original }));
+      const sameValueMe = await probeSameValue(() => caller.auth.updateMe({ [spec.key]: spec.original }));
+      const viaEntities = await attemptChange(spec, "record update", () => caller.entities.User.update(me.id, { [spec.key]: spec.canary }));
+      const viaUpdateMe = await attemptChange(spec, "profile save", () => caller.auth.updateMe({ [spec.key]: spec.canary }));
+      canary.fields[spec.key] = { sameValue, sameValueMe, viaEntities, viaUpdateMe };
+      const describe = (entry) =>
+        entry.landed
+          ? `LANDED${entry.restored ? " (restored)" : " (restore FAILED)"}`
+          : entry.wrote
+            ? "accepted, did not land"
+            : `refused (${entry.note})`;
       protectedChecks.push({
-        label: "A changed protected value actually lands (harmless value, read back, restored)",
-        actual: `company list: ${canary.fields.companyIds.landed ? "landed" : "did not land"}; active company: ${canary.fields.activeCompany.landed ? "landed" : "did not land"}; role: ${canary.fields.role.landed ? "landed" : "did not land"}; all restored: ${restoredAll}`,
-        pass: !canary.fields.companyIds.landed && !canary.fields.activeCompany.landed && !canary.fields.role.landed && restoredAll,
+        label: spec.checkLabel,
+        actual: `changed value — ${describe(viaEntities)} via record update, ${describe(viaUpdateMe)} via profile save (same-value control: ${sameValue} / ${sameValueMe})`,
+        pass: !viaEntities.landed && !viaUpdateMe.landed,
       });
     }
 
     // ---- test 2: raising this account's own company role -------------------
     const roleChecks = [];
-    let sameValueMembershipAllowed = false;
+    const targetRole = mine.role === "owner" ? "member" : "owner";
+    const ownRoleSameValue = await probeSameValue(() => caller.entities.CompanyMembership.update(mine.id, { role: mine.role }));
+    const escalation = { attempted: true, target: targetRole };
     try {
-      await caller.entities.CompanyMembership.update(mine.id, { role: mine.role });
-      sameValueMembershipAllowed = true;
-      roleChecks.push({ label: "Edit own membership record (same role)", actual: "accepted", pass: false });
+      await caller.entities.CompanyMembership.update(mine.id, { role: targetRole });
+      escalation.wrote = true;
     } catch (error) {
-      roleChecks.push({ label: "Edit own membership record (same role)", actual: `refused (${short(error)})`, pass: true });
+      escalation.wrote = false;
+      escalation.note = short(error);
     }
-
-    const escalation = { attempted: false };
-    if (sameValueMembershipAllowed) {
-      escalation.attempted = true;
-      try {
-        await caller.entities.CompanyMembership.update(mine.id, { role: "owner" });
-        escalation.wrote = true;
-      } catch (error) {
-        escalation.wrote = false;
-        escalation.note = short(error);
+    if (escalation.wrote) {
+      const after = a(await service.entities.CompanyMembership.filter({ id: mine.id }))[0] || {};
+      escalation.landed = after.role === targetRole && after.role !== mine.role;
+      if (escalation.landed) {
+        await service.entities.CompanyMembership.update(mine.id, { role: mine.role });
+        escalation.restored = (a(await service.entities.CompanyMembership.filter({ id: mine.id }))[0] || {}).role === mine.role;
+        if (!escalation.restored) restoreLog.push("own membership role restore failed");
       }
-      try {
-        const after = a(await service.entities.CompanyMembership.filter({ id: mine.id }))[0] || {};
-        escalation.landed = after.role === "owner";
-      } finally {
-        if (escalation.landed) {
-          await service.entities.CompanyMembership.update(mine.id, { role: mine.role });
-          escalation.restored = (a(await service.entities.CompanyMembership.filter({ id: mine.id }))[0] || {}).role === mine.role;
-          if (!escalation.restored) restoreLog.push("membership role restore failed");
-        }
-      }
-      roleChecks.push({
-        label: "Raise own company role to Owner",
-        actual: escalation.landed ? "ALLOWED" : `refused (${escalation.note || "denied"})`,
-        pass: !escalation.landed,
-      });
     }
+    roleChecks.push({
+      label: `Raise own company role (to ${targetRole})`,
+      actual: escalation.landed
+        ? `ALLOWED — role changed${escalation.restored ? ", then restored" : ", restore FAILED"}`
+        : escalation.wrote
+          ? "accepted, did not land"
+          : `refused (${escalation.note}) (same-value control: ${ownRoleSameValue})`,
+      pass: !escalation.landed,
+    });
 
     let duplicateSelf = null;
     try {
@@ -356,7 +362,7 @@ export async function runSecurityCore(context, options = {}) {
       integrity.foreignFixtureIntact && integrity.attackerRowsLeftBehind === 0;
 
     groups.push(
-      { key: "protected", title: "Protected fields (company list, active company, own role)", checks: protectedChecks },
+      { key: "protected", title: "Protected user fields (company list, active company, platform role)", checks: protectedChecks },
       { key: "elevation", title: "Raising its own company role", checks: roleChecks },
       { key: "reads", title: "Reading the other company's data", checks: readChecks },
       { key: "writes", title: "Creating, editing and deleting in the other company", checks: writeChecks },
@@ -401,6 +407,15 @@ export async function runSecurityCore(context, options = {}) {
     } catch (restoreError) {
       // surfaced below
     }
-    return { status: "error", reason: short(error), preflight, groups, verdicts: null, integrity: null };
+    return {
+      status: "error",
+      reason: short(error),
+      detail: String(error?.message || error),
+      stack: String(error?.stack || "").split("\n").slice(0, 8).join(" | "),
+      preflight,
+      groups,
+      verdicts: null,
+      integrity: null,
+    };
   }
 }
