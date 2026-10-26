@@ -3,7 +3,6 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
 import {
   asArray,
-  canManageCompany,
   getActiveSession,
   httpError,
   isOwner,
@@ -191,6 +190,9 @@ export const updateMemberRole = createServerFn({ method: "POST" })
     }
     if (isOwner(membership.role)) throw httpError(403, "The company owner's role can't be changed", "OWNER_ONLY");
     if (membership.user_id === session.user.id) throw httpError(403, "You can't change your own role", "SELF_ROLE");
+    if (membership.role === "admin" && !isOwner(session.activeCompany.role)) {
+      throw httpError(403, "Only the company owner can change an admin's role", "OWNER_ONLY");
+    }
     if (data.role === "admin" && !isOwner(session.activeCompany.role)) {
       throw httpError(403, "Only the company owner can assign admins", "OWNER_ONLY");
     }
@@ -212,8 +214,8 @@ export const removeMember = createServerFn({ method: "POST" })
     }
     if (isOwner(membership.role)) throw httpError(403, "The company owner can't be removed", "OWNER_ONLY");
     if (membership.user_id === session.user.id) throw httpError(403, "You can't remove yourself", "SELF_REMOVE");
-    if (membership.role === "admin" && !canManageCompany(session.activeCompany.role)) {
-      throw httpError(403, "You don't have permission to do that", "FORBIDDEN");
+    if (membership.role === "admin" && !isOwner(session.activeCompany.role)) {
+      throw httpError(403, "Only the company owner can remove an admin", "OWNER_ONLY");
     }
 
     await service.entities.CompanyMembership.delete(membership.id);

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
 import { asArray, httpError, requireCompanyContext } from "@/lib/tenant.server";
 import { round2, todayISO } from "@/lib/format";
+import { escapeRegex } from "@/lib/search";
 
 const LineItem = z.object({
   description: z.string().max(200).optional(),
@@ -63,10 +64,11 @@ export const listQuotations = createServerFn({ method: "GET" })
     if (data.status) query.status = data.status;
     if (data.client_id) query.client_id = data.client_id;
     if (data.search) {
+      const term = escapeRegex(data.search);
       query.$or = [
-        { number: { $regex: data.search, $options: "i" } },
-        { client_name: { $regex: data.search, $options: "i" } },
-        { subject: { $regex: data.search, $options: "i" } },
+        { number: { $regex: term, $options: "i" } },
+        { client_name: { $regex: term, $options: "i" } },
+        { subject: { $regex: term, $options: "i" } },
       ];
     }
     const page = await context.getBase44().entities.Quotation.filter(query, {

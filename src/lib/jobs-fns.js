@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
 import { asArray, httpError, requireCompanyContext } from "@/lib/tenant.server";
+import { escapeRegex } from "@/lib/search";
 
 const JobInput = z.object({
   title: z.string().min(1).max(160),
@@ -58,9 +59,10 @@ export const listJobs = createServerFn({ method: "GET" })
     if (data.status) query.status = data.status;
     if (data.client_id) query.client_id = data.client_id;
     if (data.search) {
+      const term = escapeRegex(data.search);
       query.$or = [
-        { title: { $regex: data.search, $options: "i" } },
-        { client_name: { $regex: data.search, $options: "i" } },
+        { title: { $regex: term, $options: "i" } },
+        { client_name: { $regex: term, $options: "i" } },
       ];
     }
     const page = await context.getBase44().entities.Job.filter(query, {

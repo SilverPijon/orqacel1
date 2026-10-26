@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
 import { asArray, httpError, requireCompanyContext } from "@/lib/tenant.server";
+import { escapeRegex } from "@/lib/search";
 
 const TEXT_FIELDS = [
   "name", "contact_name", "email", "phone", "address",
@@ -46,10 +47,11 @@ export const listClients = createServerFn({ method: "GET" })
     const query = { company_id: session.activeCompany.id };
     if (data.status) query.status = data.status;
     if (data.search) {
+      const term = escapeRegex(data.search);
       query.$or = [
-        { name: { $regex: data.search, $options: "i" } },
-        { contact_name: { $regex: data.search, $options: "i" } },
-        { email: { $regex: data.search, $options: "i" } },
+        { name: { $regex: term, $options: "i" } },
+        { contact_name: { $regex: term, $options: "i" } },
+        { email: { $regex: term, $options: "i" } },
       ];
     }
     const page = await context.getBase44().entities.Client.filter(query, {

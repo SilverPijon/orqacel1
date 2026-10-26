@@ -2,11 +2,23 @@
 // Reads are made as the caller (entity rules apply); fixture setup, read-back and every
 // restore use the service role. Caller identity always comes from the session.
 
+import { httpError } from "@/lib/tenant.server";
+
 const a = (result) => (Array.isArray(result) ? result : result?.items || []);
 export const B_NAME = "ORQACEL SECURITY TEST — DELETE ME";
 const TEST_MEMBER_EMAIL = "security-test-member@orqacel.test";
 const BOGUS_ID = "TEST-bogus-company-id";
+const TEST_RUNNER_EMAIL = "sillu_231@hotmail.com";
 const short = (error) => String(error?.status || error?.message || "error").slice(0, 60);
+
+// The audit reads other-company data and writes with the service role, so it runs only for its
+// designated test account: every other signed-in member is refused before any probing starts.
+export function assertAuditCaller(user) {
+  const email = String(user?.email || "").trim().toLowerCase();
+  if (email !== TEST_RUNNER_EMAIL) {
+    throw httpError(403, "This temporary audit runs only for its designated test account.", "AUDIT_LOCKED");
+  }
+}
 
 export async function loadContext(context) {
   const caller = context.getBase44();
@@ -63,11 +75,13 @@ export function blockedReason(preflight) {
 }
 
 export async function preflightCore(context) {
+  assertAuditCaller(context.user);
   const { preflight } = await loadContext(context);
   return { preflight, blockedReason: blockedReason(preflight) };
 }
 
 export async function runSecurityCore(context, options = {}) {
+  assertAuditCaller(context.user);
   const { caller, service, me, userRow, companyB, mine, myCompany, preflight } = await loadContext(context);
 
   const stop = preflight.fixtureReady ? (options.skipRoleGuard ? null : blockedReason(preflight)) : blockedReason(preflight);
