@@ -1,0 +1,406 @@
+// TEMPORARY security-test logic (Phase 2). Server-only. Removed once the run is recorded.
+// Reads are made as the caller (entity rules apply); fixture setup, read-back and every
+// restore use the service role. Caller identity always comes from the session.
+
+const a = (result) => (Array.isArray(result) ? result : result?.items || []);
+export const B_NAME = "ORQACEL SECURITY TEST — DELETE ME";
+const TEST_MEMBER_EMAIL = "security-test-member@orqacel.test";
+const BOGUS_ID = "TEST-bogus-company-id";
+const short = (error) => String(error?.status || error?.message || "error").slice(0, 60);
+
+export async function loadContext(context) {
+  const caller = context.getBase44();
+  const service = caller.asServiceRole;
+  const me = context.user;
+
+  const userRow = a(await service.entities.User.filter({ id: me.id }))[0] || {};
+  const memberships = a(await service.entities.CompanyMembership.filter({ user_id: me.id }));
+  const companyB = a(await service.entities.Company.filter({ name: B_NAME }))[0] || null;
+  const real = memberships.filter((row) => row.company_id !== companyB?.id);
+  const activeReal = real.filter((row) => row.status === "active");
+  const mine = activeReal[0] || null;
+  const myCompany = mine ? a(await service.entities.Company.filter({ id: mine.company_id }))[0] || null : null;
+  const fixtureCounts = companyB
+    ? {
+        clients: a(await service.entities.Client.filter({ company_id: companyB.id })).length,
+        quotations: a(await service.entities.Quotation.filter({ company_id: companyB.id })).length,
+        jobs: a(await service.entities.Job.filter({ company_id: companyB.id })).length,
+        memberships: a(await service.entities.CompanyMembership.filter({ company_id: companyB.id })).length,
+      }
+    : null;
+
+  return {
+    caller,
+    service,
+    me,
+    userRow,
+    memberships,
+    companyB,
+    mine,
+    myCompany,
+    preflight: {
+      email: userRow.email || me.email || "",
+      appRole: userRow.role || null,
+      companyCount: (userRow.company_ids || []).length,
+      memberships: memberships.map((row) => `${row.role}:${row.status}`).join(" | ") || "none",
+      realCompany: myCompany?.name || null,
+      realCompanyRole: mine?.role || null,
+      realCompanyStatus: mine?.status || null,
+      fixtureReady: Boolean(companyB),
+      fixtureCounts,
+    },
+  };
+}
+
+export function blockedReason(preflight) {
+  if (!preflight.fixtureReady) return "The temporary test company is missing, so cross-company tests cannot run.";
+  if (!preflight.realCompany) return "This account has no company membership yet, so the tests cannot run.";
+  if (preflight.realCompanyStatus !== "active") return "This account's company membership is not active yet, so the tests cannot run.";
+  if (preflight.realCompanyRole !== "member") {
+    return `This account's company role is "${preflight.realCompanyRole}", not "Member" — the tests need an ordinary member account.`;
+  }
+  return null;
+}
+
+export async function preflightCore(context) {
+  const { preflight } = await loadContext(context);
+  return { preflight, blockedReason: blockedReason(preflight) };
+}
+
+export async function runSecurityCore(context, options = {}) {
+  const { caller, service, me, userRow, companyB, mine, myCompany, preflight } = await loadContext(context);
+
+  const stop = preflight.fixtureReady ? (options.skipRoleGuard ? null : blockedReason(preflight)) : blockedReason(preflight);
+  if (stop) return { status: "cannot-run", reason: stop, preflight, groups: [], verdicts: null, integrity: null };
+
+  const groups = [];
+  const originalIds = Array.isArray(userRow.company_ids) ? userRow.company_ids : [];
+  const originalActive = userRow.active_company_id || null;
+  const originalRole = userRow.role || null;
+  const restoreLog = [];
+  const restoreUserFields = async (fields) => {
+    const patch = { ...fields, _restore: true };
+    delete patch._restore;
+    await service.entities.User.update(me.id, patch);
+  };
+
+  try {
+    // ---- fixture: exactly one of each test record in the other company ------
+    const ensure = async (entity, query, payload) => {
+      const found = a(await service.entities[entity].filter(query));
+      return found.length ? found[0] : await service.entities[entity].create(payload);
+    };
+    const clientB = await ensure("Client", { company_id: companyB.id }, { company_id: companyB.id, name: "TEST foreign client (delete me)", email: "foreign@orqacel.test" });
+    const quotationB = await ensure("Quotation", { company_id: companyB.id }, { company_id: companyB.id, number: "TEST-0001", subject: "TEST foreign quotation (delete me)", status: "draft", currency: "EUR" });
+    const jobB = await ensure("Job", { company_id: companyB.id }, { company_id: companyB.id, title: "TEST foreign job (delete me)", status: "scheduled", currency: "EUR" });
+    const memberB = await ensure("CompanyMembership", { company_id: companyB.id, user_email: TEST_MEMBER_EMAIL }, { company_id: companyB.id, company_name: companyB.name, user_email: TEST_MEMBER_EMAIL, full_name: "TEST member", role: "member", status: "active" });
+
+    const specs = [
+      { name: "Client", label: "clients", id: clientB.id, filter: { company_id: companyB.id }, create: { company_id: companyB.id, name: "ATTACK client" }, update: { name: "ATTACK renamed" } },
+      { name: "Quotation", label: "quotations", id: quotationB.id, filter: { company_id: companyB.id }, create: { company_id: companyB.id, number: "ATTACK-1" }, update: { number: "ATTACK-RENAMED" } },
+      { name: "Job", label: "jobs", id: jobB.id, filter: { company_id: companyB.id }, create: { company_id: companyB.id, title: "ATTACK job" }, update: { title: "ATTACK renamed" } },
+      { name: "Company", label: "the other company record", id: companyB.id, filter: { id: companyB.id }, create: { name: "ATTACK company" }, update: { name: "ATTACK renamed company" } },
+      {
+        name: "CompanyMembership",
+        label: "memberships",
+        id: memberB.id,
+        filter: { company_id: companyB.id },
+        create: { company_id: companyB.id, company_name: companyB.name, user_id: me.id, user_email: userRow.email || me.email || "", role: "owner", status: "active" },
+        update: { role: "owner" },
+      },
+    ];
+    const leftoverIds = { Client: [], Quotation: [], Job: [], Company: [], CompanyMembership: [] };
+
+    // ---- test 3: cross-company reads ----------------------------------------
+    const readChecks = [];
+    for (const spec of specs) {
+      const entity = caller.entities[spec.name];
+      try {
+        const rows = a(await entity.filter(spec.filter, { limit: 20 }));
+        readChecks.push({ label: `List ${spec.label} of the other company`, actual: `${rows.length} row(s) returned`, pass: rows.length === 0 });
+      } catch (error) {
+        readChecks.push({ label: `List ${spec.label} of the other company`, actual: `refused (${short(error)})`, pass: true });
+      }
+      try {
+        await entity.get(spec.id);
+        readChecks.push({ label: `Open one ${spec.label} record by its id`, actual: "record returned", pass: false });
+      } catch (error) {
+        readChecks.push({ label: `Open one ${spec.label} record by its id`, actual: `refused (${short(error)})`, pass: true });
+      }
+    }
+
+    // ---- test 4: cross-company create / update / delete ---------------------
+    const writeChecks = [];
+    for (const spec of specs) {
+      const entity = caller.entities[spec.name];
+      try {
+        const created = await entity.create(spec.create);
+        if (created?.id) leftoverIds[spec.name].push(created.id);
+        writeChecks.push({ label: `Create ${spec.label} in the other company`, actual: "ALLOWED", pass: false });
+      } catch (error) {
+        writeChecks.push({ label: `Create ${spec.labels || spec.label} in the other company`, actual: `refused (${short(error)})`, pass: true });
+      }
+      try {
+        await entity.update(spec.id, spec.update);
+        writeChecks.push({ label: `Edit ${spec.label} of the other company`, actual: "ALLOWED", pass: false });
+      } catch (error) {
+        writeChecks.push({ label: `Edit ${spec.label} of the other company`, actual: `refused (${short(error)})`, pass: true });
+      }
+      try {
+        await entity.delete(spec.id);
+        writeChecks.push({ label: `Delete ${spec.label} of the other company`, actual: "ALLOWED", pass: false });
+      } catch (error) {
+        writeChecks.push({ label: `Delete ${spec.label} of the other company`, actual: `refused (${short(error)})`, pass: true });
+      }
+    }
+
+    // ---- test 1: protected fields (same value first, then harmless canary) --
+    const sameValue = {};
+    const probeSameValue = async (key, fn) => {
+      try {
+        await fn();
+        sameValue[key] = { allowed: true, actual: "accepted" };
+      } catch (error) {
+        sameValue[key] = { allowed: false, actual: `refused (${short(error)})` };
+      }
+    };
+    await probeSameValue("companyIds.entities", () => caller.entities.User.update(me.id, { company_ids: originalIds }));
+    await probeSameValue("activeCompany.entities", () => caller.entities.User.update(me.id, { active_company_id: originalActive }));
+    await probeSameValue("role.entities", () => caller.entities.User.update(me.id, { role: originalRole }));
+    await probeSameValue("companyIds.updateMe", () => caller.auth.updateMe({ company_ids: originalIds }));
+    await probeSameValue("activeCompany.updateMe", () => caller.auth.updateMe({ active_company_id: originalActive }));
+    await probeSameValue("role.updateMe", () => caller.auth.updateMe({ role: originalRole }));
+
+    const anythingAccepted = Object.values(sameValue).some((entry) => entry.allowed);
+    const canary = { performed: false, fields: {} };
+    if (anythingAccepted) {
+      canary.performed = true;
+      const canaryField = async (fieldName, payload, checkLanded, restorePayload, verifyRestored) => {
+        const entry = { wrote: false, landed: false, restored: null };
+        try {
+          await caller.entities.User.update(me.id, payload);
+          entry.wrote = true;
+        } catch (error) {
+          entry.wrote = false;
+          entry.note = short(error);
+          return entry;
+        }
+        try {
+          const after = a(await service.entities.User.filter({ id: me.id }))[0] || {};
+          entry.landed = Boolean(checkLanded(after));
+        } finally {
+          await service.entities.User.update(me.id, restorePayload);
+          const back = a(await service.entities.User.filter({ id: me.id }))[0] || {};
+          entry.restored = Boolean(verifyRestored(back));
+          if (!entry.restored) restoreLog.push(`canary restore failed: ${fieldName}`);
+        }
+        return entry;
+      };
+      canary.fields.activeCompany = await canaryField(
+        "active_company_id",
+        { active_company_id: BOGUS_ID },
+        (row) => row.active_company_id === BOGUS_ID,
+        { active_company_id: originalActive },
+        (row) => (row.active_company_id || null) === originalActive,
+      );
+      canary.fields.companyIds = await canaryField(
+        "company_ids",
+        { company_ids: [...originalIds, BOGUS_ID] },
+        (row) => (row.company_ids || []).includes(BOGUS_ID),
+        { company_ids: originalIds },
+        (row) => JSON.stringify(row.company_ids || []) === JSON.stringify(originalIds),
+      );
+      canary.fields.role = await canaryField(
+        "role",
+        { role: "admin" },
+        (row) => row.role === "admin" && originalRole !== "admin",
+        { role: originalRole },
+        (row) => (row.role || null) === originalRole,
+      );
+    }
+
+    const protectedChecks = [
+      {
+        label: "Write the account's own company list",
+        actual: sameValue["companyIds.entities"].actual,
+        pass: !sameValue["companyIds.entities"].allowed && !sameValue["companyIds.updateMe"].allowed,
+      },
+      {
+        label: "Write the account's own active company",
+        actual: sameValue["activeCompany.entities"].actual,
+        pass: !sameValue["activeCompany.entities"].allowed && !sameValue["activeCompany.updateMe"].allowed,
+      },
+      {
+        label: "Write the account's own platform role",
+        actual: sameValue["role.entities"].actual,
+        pass: !sameValue["role.entities"].allowed && !sameValue["role.updateMe"].allowed,
+      },
+    ];
+    if (canary.performed) {
+      const restoredAll = canary.fields.companyIds.restored && canary.fields.activeCompany.restored && canary.fields.role.restored;
+      protectedChecks.push({
+        label: "A changed protected value actually lands (harmless value, read back, restored)",
+        actual: `company list: ${canary.fields.companyIds.landed ? "landed" : "did not land"}; active company: ${canary.fields.activeCompany.landed ? "landed" : "did not land"}; role: ${canary.fields.role.landed ? "landed" : "did not land"}; all restored: ${restoredAll}`,
+        pass: !canary.fields.companyIds.landed && !canary.fields.activeCompany.landed && !canary.fields.role.landed && restoredAll,
+      });
+    }
+
+    // ---- test 2: raising this account's own company role -------------------
+    const roleChecks = [];
+    let sameValueMembershipAllowed = false;
+    try {
+      await caller.entities.CompanyMembership.update(mine.id, { role: mine.role });
+      sameValueMembershipAllowed = true;
+      roleChecks.push({ label: "Edit own membership record (same role)", actual: "accepted", pass: false });
+    } catch (error) {
+      roleChecks.push({ label: "Edit own membership record (same role)", actual: `refused (${short(error)})`, pass: true });
+    }
+
+    const escalation = { attempted: false };
+    if (sameValueMembershipAllowed) {
+      escalation.attempted = true;
+      try {
+        await caller.entities.CompanyMembership.update(mine.id, { role: "owner" });
+        escalation.wrote = true;
+      } catch (error) {
+        escalation.wrote = false;
+        escalation.note = short(error);
+      }
+      try {
+        const after = a(await service.entities.CompanyMembership.filter({ id: mine.id }))[0] || {};
+        escalation.landed = after.role === "owner";
+      } finally {
+        if (escalation.landed) {
+          await service.entities.CompanyMembership.update(mine.id, { role: mine.role });
+          escalation.restored = (a(await service.entities.CompanyMembership.filter({ id: mine.id }))[0] || {}).role === mine.role;
+          if (!escalation.restored) restoreLog.push("membership role restore failed");
+        }
+      }
+      roleChecks.push({
+        label: "Raise own company role to Owner",
+        actual: escalation.landed ? "ALLOWED" : `refused (${escalation.note || "denied"})`,
+        pass: !escalation.landed,
+      });
+    }
+
+    let duplicateSelf = null;
+    try {
+      duplicateSelf = await caller.entities.CompanyMembership.create({
+        company_id: mine.company_id,
+        company_name: mine.company_name,
+        user_id: me.id,
+        user_email: preflight.email,
+        role: "owner",
+        status: "active",
+      });
+      roleChecks.push({ label: "Create a second membership for itself with Owner role", actual: "ALLOWED", pass: false });
+    } catch (error) {
+      roleChecks.push({ label: "Create a second membership for itself with Owner role", actual: `refused (${short(error)})`, pass: true });
+    } finally {
+      if (duplicateSelf?.id) await service.entities.CompanyMembership.delete(duplicateSelf.id);
+    }
+
+    // ---- integrity: nothing real changed, nothing left behind --------------
+    const finalUser = a(await service.entities.User.filter({ id: me.id }))[0] || {};
+    const surviving = {
+      client: a(await service.entities.Client.filter({ id: clientB.id }))[0],
+      quotation: a(await service.entities.Quotation.filter({ id: quotationB.id }))[0],
+      job: a(await service.entities.Job.filter({ id: jobB.id }))[0],
+      company: a(await service.entities.Company.filter({ id: companyB.id }))[0],
+      member: a(await service.entities.CompanyMembership.filter({ id: memberB.id }))[0],
+    };
+    const attackRows =
+      a(await service.entities.Client.filter({ company_id: companyB.id })).filter((row) => /ATTACK/.test(row.name || "")).length +
+      a(await service.entities.Quotation.filter({ company_id: companyB.id })).filter((row) => /ATTACK/.test(row.number || "")).length +
+      a(await service.entities.Job.filter({ company_id: companyB.id })).filter((row) => /ATTACK/.test(row.title || "")).length +
+      a(await service.entities.CompanyMembership.filter({ company_id: companyB.id })).filter((row) => row.user_id === me.id).length;
+
+    for (const [entity, ids] of Object.entries(leftoverIds)) {
+      for (const id of ids) await service.entities[entity].delete(id);
+    }
+    if (attackRows) {
+      await service.entities.Client.deleteMany({ company_id: companyB.id, name: { $regex: "ATTACK" } });
+      await service.entities.Job.deleteMany({ company_id: companyB.id, title: { $regex: "ATTACK" } });
+      await service.entities.CompanyMembership.deleteMany({ company_id: companyB.id, user_id: me.id });
+    }
+
+    // Final unconditional restore of this account's protected fields.
+    const nowUser = a(await service.entities.User.filter({ id: me.id }))[0] || {};
+    const drift = {};
+    if (JSON.stringify(nowUser.company_ids || []) !== JSON.stringify(originalIds)) drift.company_ids = originalIds;
+    if ((nowUser.active_company_id || null) !== originalActive) drift.active_company_id = originalActive;
+    if ((nowUser.role || null) !== originalRole) drift.role = originalRole;
+    if (Object.keys(drift).length) {
+      await service.entities.User.update(me.id, drift);
+      restoreLog.push(`final restore of: ${Object.keys(drift).join(", ")}`);
+    }
+
+    const restoredUser = a(await service.entities.User.filter({ id: me.id }))[0] || {};
+    const myMembershipAfter = a(await service.entities.CompanyMembership.filter({ company_id: mine.company_id, user_id: me.id }));
+    const integrity = {
+      myCompanyListUnchanged: JSON.stringify(restoredUser.company_ids || []) === JSON.stringify(originalIds),
+      myActiveCompanyUnchanged: (restoredUser.active_company_id || null) === originalActive,
+      myPlatformRoleUnchanged: (restoredUser.role || null) === originalRole,
+      myCompanyRoleUnchanged: myMembershipAfter[0]?.role === mine.role,
+      myMembershipCountInRealCompany: myMembershipAfter.length,
+      realCompanyNameUnchanged: (a(await service.entities.Company.filter({ id: mine.company_id }))[0] || {}).name === myCompany?.name,
+      foreignFixtureIntact: Boolean(surviving.client && surviving.quotation && surviving.job && surviving.company && surviving.member && surviving.member.role === "member"),
+      attackerRowsLeftBehind: attackRows,
+      leftoverRecordsCleaned: Object.values(leftoverIds).flat().length,
+      restoresPerformed: restoreLog,
+    };
+    const integrityOk =
+      integrity.myCompanyListUnchanged && integrity.myActiveCompanyUnchanged &&
+      integrity.myPlatformRoleUnchanged && integrity.myCompanyRoleUnchanged &&
+      integrity.myMembershipCountInRealCompany === 1 && integrity.realCompanyNameUnchanged &&
+      integrity.foreignFixtureIntact && integrity.attackerRowsLeftBehind === 0;
+
+    groups.push(
+      { key: "protected", title: "Protected fields (company list, active company, own role)", checks: protectedChecks },
+      { key: "elevation", title: "Raising its own company role", checks: roleChecks },
+      { key: "reads", title: "Reading the other company's data", checks: readChecks },
+      { key: "writes", title: "Creating, editing and deleting in the other company", checks: writeChecks },
+      {
+        key: "integrity",
+        title: "Nothing real changed, nothing left behind",
+        checks: [{ label: "This account's own records are unchanged", actual: JSON.stringify(integrity), pass: integrityOk }],
+      },
+    );
+
+    const verdicts = {
+      protectedFields: protectedChecks.every((check) => check.pass),
+      selfElevation: roleChecks.every((check) => check.pass),
+      crossCompanyReads: readChecks.every((check) => check.pass),
+      crossCompanyWrites: writeChecks.every((check) => check.pass),
+      noSideEffects: integrityOk,
+    };
+    const overall = Object.values(verdicts).every(Boolean);
+    const report = { preflight, verdicts, canary, escalation, integrity, groups };
+
+    try {
+      await service.entities.SecurityTestRun.create({
+        run_by_email: preflight.email,
+        run_by_role: preflight.appRole || "",
+        outcome: overall ? "PASS" : "FAIL",
+        report: JSON.stringify(report),
+      });
+    } catch (error) {
+      return { status: "done", stored: false, storeError: short(error), overall, verdicts, integrity, canary, escalation, groups, preflight };
+    }
+
+    return { status: "done", stored: true, overall, verdicts, integrity, canary, escalation, groups, preflight };
+  } catch (error) {
+    // Never leave a protected field modified if anything unexpected happens.
+    try {
+      const current = a(await service.entities.User.filter({ id: me.id }))[0] || {};
+      const patch = {};
+      if (JSON.stringify(current.company_ids || []) !== JSON.stringify(originalIds)) patch.company_ids = originalIds;
+      if ((current.active_company_id || null) !== originalActive) patch.active_company_id = originalActive;
+      if ((current.role || null) !== originalRole) patch.role = originalRole;
+      if (Object.keys(patch).length) await service.entities.User.update(me.id, patch);
+    } catch (restoreError) {
+      // surfaced below
+    }
+    return { status: "error", reason: short(error), preflight, groups, verdicts: null, integrity: null };
+  }
+}
