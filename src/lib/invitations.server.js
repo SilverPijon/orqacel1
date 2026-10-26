@@ -6,7 +6,9 @@
 // also requires the signed-in user's own verified email address to match the invited one.
 
 export const INVITE_TTL_DAYS = 7;
-export const INVITE_LINK_BASE = "https://orqacel.com/invitations";
+// The published app address until the orqacel.com custom domain is verified; switch this
+// single constant back to the custom domain once it resolves.
+export const INVITE_LINK_BASE = "https://taskivo-core-hub.base44.app/invitations";
 export const INVITE_EMAIL_TEMPLATE = "CompanyInvite";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
