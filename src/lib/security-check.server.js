@@ -215,8 +215,6 @@ export async function runSecurityCore(context, options = {}) {
       const entry = { wrote: false, landed: false, restored: true };
       try {
         await write();
-        // eslint-disable-next-line no-unused-expressions
-        void 0;
         entry.wrote = true;
       } catch (error) {
         entry.note = short(error);
@@ -225,10 +223,10 @@ export async function runSecurityCore(context, options = {}) {
       const after = a(await service.entities.User.filter({ id: me.id }))[0] || {};
       entry.landed = Boolean(spec.landed(after));
       if (entry.landed) {
-        await service.entities.User.update(me.id, { [spec.key]: spec.original });
+        const note = await writeBack("User", me.id, { [spec.key]: spec.original });
         const back = a(await service.entities.User.filter({ id: me.id }))[0] || {};
         entry.restored = Boolean(spec.restored(back));
-        if (!entry.restored) restoreLog.push(`protected restore failed: ${spec.key} (${path})`);
+        if (!entry.restored) restoreLog.push(`protected restore failed: ${spec.key} (${path}) — ${note || "unknown"}`);
       }
       return entry;
     };
@@ -274,9 +272,9 @@ export async function runSecurityCore(context, options = {}) {
       const after = a(await service.entities.CompanyMembership.filter({ id: mine.id }))[0] || {};
       escalation.landed = after.role === targetRole && after.role !== mine.role;
       if (escalation.landed) {
-        await service.entities.CompanyMembership.update(mine.id, { role: mine.role });
+        const note = await writeBack("CompanyMembership", mine.id, { role: mine.role });
         escalation.restored = (a(await service.entities.CompanyMembership.filter({ id: mine.id }))[0] || {}).role === mine.role;
-        if (!escalation.restored) restoreLog.push("own membership role restore failed");
+        if (!escalation.restored) restoreLog.push(`own membership role restore failed — ${note || "unknown"}`);
       }
     }
     roleChecks.push({
@@ -337,8 +335,8 @@ export async function runSecurityCore(context, options = {}) {
     if ((nowUser.active_company_id || null) !== originalActive) drift.active_company_id = originalActive;
     if ((nowUser.role || null) !== originalRole) drift.role = originalRole;
     if (Object.keys(drift).length) {
-      await service.entities.User.update(me.id, drift);
-      restoreLog.push(`final restore of: ${Object.keys(drift).join(", ")}`);
+      const note = await writeBack("User", me.id, drift);
+      restoreLog.push(`final restore of: ${Object.keys(drift).join(", ")}${note ? ` (${note})` : ""}`);
     }
 
     const restoredUser = a(await service.entities.User.filter({ id: me.id }))[0] || {};
@@ -403,7 +401,7 @@ export async function runSecurityCore(context, options = {}) {
       if (JSON.stringify(current.company_ids || []) !== JSON.stringify(originalIds)) patch.company_ids = originalIds;
       if ((current.active_company_id || null) !== originalActive) patch.active_company_id = originalActive;
       if ((current.role || null) !== originalRole) patch.role = originalRole;
-      if (Object.keys(patch).length) await service.entities.User.update(me.id, patch);
+      if (Object.keys(patch).length) await writeBack("User", me.id, patch);
     } catch (restoreError) {
       // surfaced below
     }
