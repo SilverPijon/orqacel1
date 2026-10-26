@@ -1,0 +1,74 @@
+{
+  "name": "Client",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Owning company \u2014 the tenant boundary"
+    },
+    "name": {
+      "type": "string"
+    },
+    "contact_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "postal_code": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "tax_id": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "archived"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "company_id",
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "create": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "update": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "delete": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    }
+  }
+}

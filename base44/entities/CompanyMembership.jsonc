@@ -1,0 +1,69 @@
+{
+  "name": "CompanyMembership",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string"
+    },
+    "company_name": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Set once the invited person has a Taskivo account"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "full_name": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "owner",
+        "admin",
+        "member"
+      ],
+      "default": "member"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "invited",
+        "active"
+      ],
+      "default": "invited"
+    },
+    "invited_by_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "company_id",
+    "user_email",
+    "role"
+  ],
+  "rls": {
+    "read": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

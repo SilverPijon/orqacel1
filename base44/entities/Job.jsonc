@@ -1,0 +1,95 @@
+{
+  "name": "Job",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Owning company \u2014 the tenant boundary"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "quotation_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "scheduled"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "urgent"
+      ],
+      "default": "medium"
+    },
+    "scheduled_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "assigned_to_id": {
+      "type": "string"
+    },
+    "assigned_to_name": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string",
+      "default": "EUR"
+    }
+  },
+  "required": [
+    "company_id",
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "create": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "update": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "delete": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    }
+  }
+}

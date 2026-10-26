@@ -1,0 +1,107 @@
+{
+  "name": "Quotation",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Owning company \u2014 the tenant boundary"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "number": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "sent",
+        "accepted",
+        "declined",
+        "expired"
+      ],
+      "default": "draft"
+    },
+    "issue_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date"
+    },
+    "currency": {
+      "type": "string",
+      "default": "EUR"
+    },
+    "line_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unit_price": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "subtotal": {
+      "type": "number"
+    },
+    "tax_rate": {
+      "type": "number"
+    },
+    "tax_amount": {
+      "type": "number"
+    },
+    "total": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string",
+      "description": "Set when the quotation was turned into a job"
+    }
+  },
+  "required": [
+    "company_id",
+    "number"
+  ],
+  "rls": {
+    "read": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "create": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "update": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "delete": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    }
+  }
+}

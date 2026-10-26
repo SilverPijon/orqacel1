@@ -1,0 +1,35 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "company_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Companies this user is an active member of. Server-managed only.",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "collaborator_role": "editor"
+          }
+        }
+      }
+    },
+    "active_company_id": {
+      "type": "string",
+      "description": "The company the user is currently working in. Server-managed only.",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "collaborator_role": "editor"
+          }
+        }
+      }
+    },
+    "language": {
+      "type": "string",
+      "default": "en"
+    }
+  }
+}

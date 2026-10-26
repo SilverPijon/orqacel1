@@ -1,20 +1,34 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getServerInfo } from "@/lib/server-fns";
+import LandingHeader from "@/components/landing/LandingHeader";
+import Hero from "@/components/landing/Hero";
+import Features from "@/components/landing/Features";
+import Pricing from "@/components/landing/Pricing";
+import LandingFooter from "@/components/landing/LandingFooter";
 
 export const Route = createFileRoute("/")({
-  loader: () => getServerInfo(),
-  head: () => ({ meta: [{ title: "Base44 App" }] }),
-  component: HomePage,
+  head: () => ({
+    meta: [
+      { title: "Taskivo — Clients, quotations and jobs for service businesses" },
+      {
+        name: "description",
+        content:
+          "Taskivo is the workspace for freelancers and small service businesses: manage clients, create quotations with line items and track jobs — in 11 languages.",
+      },
+    ],
+  }),
+  component: LandingPage,
 });
 
-function HomePage() {
-  const { renderedAt } = Route.useLoaderData();
+function LandingPage() {
   return (
-    <main className="mx-auto max-w-5xl space-y-4 px-4 py-8">
-      <h1 className="text-3xl font-semibold tracking-tight">Your app starts here</h1>
-      <p className="text-muted-foreground">
-        Server-rendered at <time dateTime={renderedAt}>{renderedAt}</time>.
-      </p>
-    </main>
+    <div className="min-h-dvh bg-background">
+      <LandingHeader />
+      <main>
+        <Hero />
+        <Features />
+        <Pricing />
+      </main>
+      <LandingFooter />
+    </div>
   );
 }
