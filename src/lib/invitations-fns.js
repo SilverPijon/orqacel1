@@ -17,6 +17,7 @@ import {
   inviteExpiresAt,
   inviteExpiryIso,
 } from "@/lib/invitations.server";
+import { assertInviteAllowed, assertResendAllowed } from "@/lib/invite-limits.server";
 
 const InviteInput = z.object({
   email: z.string().email().max(160),
@@ -140,6 +141,13 @@ export const inviteMember = createServerFn({ method: "POST" })
       // declined / revoked / expired rows are superseded by a fresh invitation below.
     }
 
+    // Bounds on how much mail this flow can produce. Checked before the row is written and
+    // before anything is sent, so a blocked invitation leaves no trace.
+    await assertInviteAllowed(service, {
+      companyId: session.activeCompany.id,
+      userId: session.user.id,
+    });
+
     const person = first(await service.entities.User.filter({ email }));
     const token = await issueToken();
     const now = new Date().toISOString();
@@ -169,7 +177,6 @@ export const inviteMember = createServerFn({ method: "POST" })
     // No company list sync here: a pending invitation must not grant any access.
     const delivery = await deliverInvitation(context, {
       email,
-      fullName: fields.full_name,
       companyName: session.activeCompany.name,
       role: data.role,
       inviterName: session.user.full_name,
@@ -189,6 +196,7 @@ export const resendInvitation = createServerFn({ method: "POST" })
       context,
       data.membership_id,
     );
+    assertResendAllowed(membership);
 
     const token = await issueToken();
     const now = new Date().toISOString();
@@ -206,7 +214,6 @@ export const resendInvitation = createServerFn({ method: "POST" })
 
     const delivery = await deliverInvitation(context, {
       email: membership.user_email,
-      fullName: membership.full_name,
       companyName: session.activeCompany.name,
       role: membership.role,
       inviterName: session.user.full_name,

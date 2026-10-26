@@ -73,6 +73,19 @@ export function formatInviteDate(iso) {
   });
 }
 
+// Display text that reaches an email. No markup, no line breaks and no control characters,
+// capped so that it stays a name rather than a message: a company or profile name is chosen
+// by the person sending the invitation, and it must not become the wording of the mail.
+export function safeEmailText(value, maxLength = 60) {
+  const text = String(value ?? "")
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/[<>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text.length > maxLength ? text.slice(0, maxLength).trimEnd() : text;
+}
+
 // Delivery has two independent, officially supported parts:
 //  1. the platform app-user invite, which creates the invitee's application access and
 //     sends the platform's own invite email -- only needed when the address has no account;
@@ -81,7 +94,7 @@ export function formatInviteDate(iso) {
 // is told what happened, and the invitation can be resent.
 export async function deliverInvitation(
   context,
-  { email, fullName, companyName, role, inviterName, token, expiresAt, needsAccountInvite },
+  { email, companyName, role, inviterName, token, expiresAt, needsAccountInvite },
 ) {
   const client = context.getBase44();
   const service = client.asServiceRole;
@@ -103,9 +116,11 @@ export async function deliverInvitation(
       template_name: INVITE_EMAIL_TEMPLATE,
       category: "transactional",
       variables: {
-        first_name: fullName || email,
-        inviter_name: inviterName || "An Orqacel member",
-        company_name: companyName,
+        // Only text the company itself owns reaches the email, cleaned and capped. The
+        // invitee's own name is never taken from what the inviter typed, and the role, the
+        // accept link and the expiry date are all produced server-side.
+        inviter_name: safeEmailText(inviterName) || "An Orqacel member",
+        company_name: safeEmailText(companyName) || "a company",
         role_label: roleLabel(role),
         accept_url: inviteLink(token.raw),
         expires_at: formatInviteDate(expiresAt),
