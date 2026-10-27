@@ -6,6 +6,12 @@ export const QUOTATION_STATUS = {
   expired: { key: "quotations.status_expired", tone: "warning" },
 };
 
+export const INVOICE_STATUS = {
+  draft: { key: "invoices.status_draft", tone: "muted" },
+  issued: { key: "invoices.status_issued", tone: "success" },
+  cancelled: { key: "invoices.status_cancelled", tone: "danger" },
+};
+
 export const JOB_STATUS = {
   scheduled: { key: "jobs.status_scheduled", tone: "primary" },
   in_progress: { key: "jobs.status_in_progress", tone: "warning" },

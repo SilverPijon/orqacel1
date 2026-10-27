@@ -88,6 +88,11 @@
       "type": "string",
       "format": "date-time",
       "description": "When the logo was last set, replaced or removed"
+    },
+    "invoice_sequence": {
+      "type": "number",
+      "default": 0,
+      "description": "Highest invoice number claimed for this company. Written only by the app's server functions, so two invoices created at the same moment cannot both take the same number."
     }
   },
   "required": [

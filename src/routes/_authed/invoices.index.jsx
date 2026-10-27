@@ -1,0 +1,134 @@
+import React, { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2, Plus, Receipt, Search } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import InvoicesTable from "@/components/invoices/InvoicesTable";
+import { usePagedList } from "@/hooks/usePagedList";
+import { useSession } from "@/lib/SessionContext";
+import { deleteInvoice, listInvoices } from "@/lib/invoices-fns";
+import { useI18n } from "@/lib/i18n/I18nContext";
+
+export const Route = createFileRoute("/_authed/invoices/")({
+  head: () => ({ meta: [{ title: "Orqacel — Invoices" }] }),
+  component: InvoicesPage,
+});
+
+function InvoicesPage() {
+  const { t } = useI18n();
+  const { activeCompany, permissions } = useSession();
+  const navigate = useNavigate();
+  const fetchInvoices = useServerFn(listInvoices);
+  const deleteFn = useServerFn(deleteInvoice);
+
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const list = usePagedList(fetchInvoices, {
+    ...(search.trim() ? { search: search.trim() } : {}),
+    ...(status !== "all" ? { status } : {}),
+  });
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    try {
+      await deleteFn({ data: { id: pendingDelete.id } });
+      setPendingDelete(null);
+      await list.reload();
+      toast.success(t("common.saved"));
+    } catch (error) {
+      toast.error(error?.message || t("common.error"));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div>
+      <PageHeader title={t("invoices.title")} subtitle={t("invoices.subtitle")}>
+        <Button asChild className="gap-2">
+          <Link to="/invoices/new">
+            <Plus className="h-4 w-4" />
+            {t("invoices.new")}
+          </Link>
+        </Button>
+      </PageHeader>
+
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row">
+        <div className="relative sm:max-w-xs sm:flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={`${t("common.search")}…`}
+            className="pl-9"
+          />
+        </div>
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className="sm:w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("common.all")}</SelectItem>
+            <SelectItem value="draft">{t("invoices.status_draft")}</SelectItem>
+            <SelectItem value="issued">{t("invoices.status_issued")}</SelectItem>
+            <SelectItem value="cancelled">{t("invoices.status_cancelled")}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {list.loading ? (
+        <div className="grid min-h-[30vh] place-items-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : list.items.length ? (
+        <>
+          <InvoicesTable
+            invoices={list.items}
+            currency={activeCompany?.currency || "EUR"}
+            canManage={permissions.canManage}
+            onEdit={(invoice) =>
+              navigate({ to: "/invoices/$invoiceId/edit", params: { invoiceId: invoice.id } })
+            }
+            onDelete={(invoice) => setPendingDelete(invoice)}
+          />
+          {list.hasMore ? (
+            <div className="mt-4 flex justify-center">
+              <Button variant="outline" onClick={list.loadMore} disabled={list.loadingMore} className="gap-2">
+                {list.loadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {t("common.more")}
+              </Button>
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <EmptyState icon={Receipt} title={t("invoices.empty")} description={t("invoices.empty_desc")}>
+          <Button asChild className="gap-2">
+            <Link to="/invoices/new">
+              <Plus className="h-4 w-4" />
+              {t("invoices.new")}
+            </Link>
+          </Button>
+        </EmptyState>
+      )}
+
+      <ConfirmDeleteDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => (open ? null : setPendingDelete(null))}
+        title={t("invoices.delete_title")}
+        description={t("invoices.delete_desc")}
+        onConfirm={confirmDelete}
+        pending={deleting}
+      />
+    </div>
+  );
+}

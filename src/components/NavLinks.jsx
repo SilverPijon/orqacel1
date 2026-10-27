@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutDashboard, Briefcase, FileText, Settings, Users } from "lucide-react";
+import { LayoutDashboard, Briefcase, FileText, Receipt, Settings, Users } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
@@ -7,6 +7,7 @@ const ITEMS = [
   { to: "/dashboard", icon: LayoutDashboard, key: "nav.dashboard" },
   { to: "/clients", icon: Users, key: "nav.clients" },
   { to: "/quotations", icon: FileText, key: "nav.quotations" },
+  { to: "/invoices", icon: Receipt, key: "nav.invoices" },
   { to: "/jobs", icon: Briefcase, key: "nav.jobs" },
   { to: "/settings", icon: Settings, key: "nav.settings" },
 ];

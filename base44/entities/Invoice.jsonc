@@ -1,0 +1,142 @@
+{
+  "name": "Invoice",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Owning company \u2014 the tenant boundary"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Customer the invoice is addressed to, always resolved inside the same company"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Customer name as it was when the invoice was created, so the invoice keeps reading correctly if the customer is later renamed"
+    },
+    "number": {
+      "type": "string",
+      "description": "Company-scoped invoice number, assigned once by the server when the invoice is created and never renumbered"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "issued",
+        "cancelled"
+      ],
+      "default": "draft",
+      "description": "Draft invoices can still be edited. Issued invoices are frozen financial records. Cancelled invoices are kept for history. Transitions are validated on the server."
+    },
+    "issue_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "currency": {
+      "type": "string",
+      "default": "EUR"
+    },
+    "line_items": {
+      "type": "array",
+      "description": "Invoice lines, stored with the invoice. Each line carries its own VAT rate, so one invoice can mix rates.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "number",
+            "description": "Zero-based order of the line within the invoice"
+          },
+          "description": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unit_price": {
+            "type": "number"
+          },
+          "vat_rate": {
+            "type": "number",
+            "description": "VAT percentage for this line"
+          },
+          "line_total": {
+            "type": "number",
+            "description": "Net line amount (quantity x unit price), rounded to cents once"
+          }
+        }
+      }
+    },
+    "vat_rate_set": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when VAT was configured deliberately on this invoice, so an explicitly entered 0% is distinguishable from a rate nobody ever set"
+    },
+    "vat_summary": {
+      "type": "array",
+      "description": "VAT grouped by rate: one row per rate used on the invoice, with the net base and the VAT charged on it",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rate": {
+            "type": "number"
+          },
+          "base": {
+            "type": "number"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "subtotal": {
+      "type": "number",
+      "description": "Sum of the net line amounts"
+    },
+    "vat_amount": {
+      "type": "number",
+      "description": "Sum of the VAT charged across all rates"
+    },
+    "total": {
+      "type": "number",
+      "description": "subtotal + vat_amount"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the invoice was issued"
+    },
+    "cancelled_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the invoice was cancelled"
+    }
+  },
+  "required": [
+    "company_id",
+    "number"
+  ],
+  "rls": {
+    "read": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "create": {
+      "created_by_id": "__app_users_may_not_write_invoices__"
+    },
+    "update": {
+      "created_by_id": "__app_users_may_not_write_invoices__"
+    },
+    "delete": {
+      "created_by_id": "__app_users_may_not_write_invoices__"
+    }
+  }
+}
