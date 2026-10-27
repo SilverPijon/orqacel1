@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth-middleware";
 import { asArray, httpError, requireCompanyContext } from "@/lib/tenant.server";
 import { round2, todayISO } from "@/lib/format";
 import { escapeRegex } from "@/lib/search";
+import { claimQuotationNumber } from "@/lib/quotationNumber.server";
 
 const LineItem = z.object({
   description: z.string().max(200).optional(),
@@ -113,14 +114,16 @@ export const createQuotation = createServerFn({ method: "POST" })
     const companyId = session.activeCompany.id;
     const client = await resolveClient(context, companyId, data.client_id);
 
-    const count = await service.entities.Quotation.count({ company_id: companyId });
+    // The number is claimed before the quotation is written, exclusively, and is never looked up or
+    // corrected afterwards: two quotations can never share a number and none is ever renumbered.
+    const number = await claimQuotationNumber(service, companyId);
     const totals = computeTotals(data.line_items, data.tax_rate);
 
     const created = await service.entities.Quotation.create({
       company_id: companyId,
       client_id: client.id,
       client_name: client.name,
-      number: `QT-${1001 + count}`,
+      number,
       subject: (data.subject || "").trim(),
       status: "draft",
       issue_date: data.issue_date || todayISO(),

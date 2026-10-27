@@ -13,6 +13,7 @@ import {
 } from "@/lib/tenant.server";
 import { invitationState, inviteExpiresAt } from "@/lib/invitations.server";
 import { INVOICE_COUNTER_START } from "@/lib/invoiceNumber.server";
+import { QUOTATION_COUNTER_START } from "@/lib/quotationNumber.server";
 
 const COMPANY_PROFILE = {
   legal_name: z.string().max(160).optional(),
@@ -56,9 +57,10 @@ export const createCompany = createServerFn({ method: "POST" })
       owner_user_id: user.id,
       plan: "free",
       status: "active",
-      // The invoice counter is created with the company, so its first invoice is INV-1001. Only the
-      // app's server functions ever write it.
+      // The document counters are created with the company, so its first invoice is INV-1001 and its
+      // first quotation QT-1001. Only the app's server functions ever write them.
       invoice_sequence: INVOICE_COUNTER_START,
+      quotation_sequence: QUOTATION_COUNTER_START,
     });
 
     await service.entities.CompanyMembership.create({

@@ -94,6 +94,11 @@
       "default": 0,
       "description": "Highest invoice number claimed for this company. Written only by the app's server functions, so two invoices created at the same moment cannot both take the same number."
     },
+    "quotation_sequence": {
+      "type": "number",
+      "default": 0,
+      "description": "Highest quotation number claimed for this company. Written only by the app's server functions, so two quotations created at the same moment cannot both take the same number."
+    },
     "default_bank_account_id": {
       "type": "string",
       "description": "The company's preferred bank account, used only to preselect an account on a new invoice. One field, so two accounts can never both be the default. It never limits how many accounts the company may save, and any saved account can still be chosen on an individual invoice. Written only by the app's server functions, which claim it with a conditional update."

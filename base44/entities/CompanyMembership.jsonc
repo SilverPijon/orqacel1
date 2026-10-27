@@ -63,6 +63,11 @@
       "format": "date-time",
       "description": "When the invitation email was last sent"
     },
+    "send_count": {
+      "type": "number",
+      "default": 0,
+      "description": "How many times this invitation has been emailed, the first send included. Resending is refused past a small ceiling, so one address cannot be mailed again and again."
+    },
     "responded_at": {
       "type": "string",
       "format": "date-time",

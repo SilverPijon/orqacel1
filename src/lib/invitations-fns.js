@@ -154,6 +154,7 @@ export const inviteMember = createServerFn({ method: "POST" })
     await assertInviteAllowed(service, {
       companyId: session.activeCompany.id,
       userId: session.user.id,
+      email,
     });
     const token = await issueToken();
     const now = new Date().toISOString();
@@ -172,6 +173,8 @@ export const inviteMember = createServerFn({ method: "POST" })
       invited_at: now,
       expires_at: expiresAt,
       last_sent_at: now,
+      // This row is about to be emailed once; a resend raises it, up to a small ceiling.
+      send_count: 1,
       token_hash: token.hash,
       responded_at: null,
     };
@@ -202,7 +205,7 @@ export const resendInvitation = createServerFn({ method: "POST" })
       context,
       data.membership_id,
     );
-    assertResendAllowed(membership);
+    await assertResendAllowed(service, membership);
 
     // A resend mails the same address again, so it passes the same trust boundary as a first
     // invitation: a confirmed, settled sender account.
@@ -220,6 +223,7 @@ export const resendInvitation = createServerFn({ method: "POST" })
       invited_at: membership.invited_at || now,
       expires_at: expiresAt,
       last_sent_at: now,
+      send_count: Number(membership.send_count || 0) + 1,
       token_hash: token.hash,
       responded_at: null,
     });
