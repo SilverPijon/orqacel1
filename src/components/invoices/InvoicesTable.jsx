@@ -15,7 +15,7 @@ import { isDraft } from "@/lib/invoiceLifecycle";
 import { formatDate, formatMoney } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
-export default function InvoicesTable({ invoices, currency, onEdit, onDelete, canManage }) {
+export default function InvoicesTable({ invoices, onEdit, onDelete, canManage }) {
   const { t, lang } = useI18n();
 
   return (
@@ -63,7 +63,8 @@ export default function InvoicesTable({ invoices, currency, onEdit, onDelete, ca
                 />
               </TableCell>
               <TableCell className="text-right font-mono text-xs font-semibold">
-                {formatMoney(invoice.total, invoice.currency || currency, lang)}
+                {/* The currency the invoice was written in, never the company's current one. */}
+                {formatMoney(invoice.total, invoice.currency || "EUR", lang)}
               </TableCell>
               <TableCell>
                 {/* Only a draft may change, and only for owners and admins: anything else has no

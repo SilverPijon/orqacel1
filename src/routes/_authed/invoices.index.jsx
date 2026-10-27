@@ -46,7 +46,10 @@ function InvoicesPage() {
       await list.reload();
       toast.success(t("common.saved"));
     } catch (error) {
+      // A conflict means the invoice was issued or cancelled in the meantime: show its real state.
       toast.error(error?.message || t("common.error"));
+      setPendingDelete(null);
+      await list.reload();
     } finally {
       setDeleting(false);
     }
@@ -94,7 +97,6 @@ function InvoicesPage() {
         <>
           <InvoicesTable
             invoices={list.items}
-            currency={activeCompany?.currency || "EUR"}
             canManage={permissions.canManage}
             onEdit={(invoice) =>
               navigate({ to: "/invoices/$invoiceId/edit", params: { invoiceId: invoice.id } })

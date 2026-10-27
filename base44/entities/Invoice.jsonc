@@ -8,7 +8,7 @@
     },
     "client_id": {
       "type": "string",
-      "description": "Customer the invoice is addressed to, always resolved inside the same company"
+      "description": "Customer the invoice is addressed to, always resolved inside the same company. Kept for navigation only: what the invoice displays comes from the frozen buyer snapshot."
     },
     "client_name": {
       "type": "string",
@@ -16,7 +16,7 @@
     },
     "number": {
       "type": "string",
-      "description": "Company-scoped invoice number, assigned once by the server when the invoice is created and never renumbered"
+      "description": "Company-scoped invoice number, claimed from the company's counter and stored when the invoice is created. Never renumbered, never reused."
     },
     "status": {
       "type": "string",
@@ -26,7 +26,7 @@
         "cancelled"
       ],
       "default": "draft",
-      "description": "Draft invoices can still be edited. Issued invoices are frozen financial records. Cancelled invoices are kept for history. Transitions are validated on the server."
+      "description": "Draft invoices can still be edited. Issued invoices are frozen financial records. Cancelled invoices are kept for history. Transitions are validated and written conditionally on the server."
     },
     "issue_date": {
       "type": "string",
@@ -38,7 +38,8 @@
     },
     "currency": {
       "type": "string",
-      "default": "EUR"
+      "default": "EUR",
+      "description": "Currency the invoice was written in, captured from the company at creation and never taken from the company again"
     },
     "line_items": {
       "type": "array",
@@ -104,6 +105,83 @@
     "total": {
       "type": "number",
       "description": "subtotal + vat_amount"
+    },
+    "seller_snapshot": {
+      "type": "object",
+      "description": "The seller's identity as it was when the invoice was issued, frozen into the invoice. Written by the app's server functions only, and never again after the invoice is issued, so editing the company profile cannot change an invoice that already exists.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "legal_name": {
+          "type": "string"
+        },
+        "registration_number": {
+          "type": "string"
+        },
+        "tax_number": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "website": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "postal_code": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string",
+          "description": "ISO 3166-1 alpha-2 country code"
+        },
+        "logo_updated_at": {
+          "type": "string",
+          "description": "Version marker of the company logo that was current at the time. The logo image itself is not copied per invoice."
+        }
+      }
+    },
+    "buyer_snapshot": {
+      "type": "object",
+      "description": "The customer's identity and billing details as they were when the invoice was issued, frozen into the invoice for the same reason as the seller snapshot.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "contact_name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "postal_code": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "tax_id": {
+          "type": "string"
+        }
+      }
     },
     "notes": {
       "type": "string"

@@ -62,7 +62,9 @@ function InvoiceDetailPage() {
       await query.refetch();
       toast.success(t("common.saved"));
     } catch (error) {
+      // A conflict means the invoice moved on (issued or cancelled) while this was open: show it.
       toast.error(error?.message || t("common.error"));
+      await query.refetch();
     } finally {
       setBusy(false);
     }
@@ -76,6 +78,7 @@ function InvoiceDetailPage() {
       navigate({ to: "/invoices" });
     } catch (error) {
       toast.error(error?.message || t("common.error"));
+      await query.refetch();
       setBusy(false);
     }
   };
@@ -118,7 +121,10 @@ function InvoiceDetailPage() {
                 invoice.client_name || "—"
               )}
             </p>
-            {client?.email ? <p className="text-xs text-muted-foreground">{client.email}</p> : null}
+            {/* The invoice's own record of the customer, not the customer's current details. */}
+            {invoice.buyer_snapshot?.email ? (
+              <p className="text-xs text-muted-foreground">{invoice.buyer_snapshot.email}</p>
+            ) : null}
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("invoices.issue_date")}</p>
