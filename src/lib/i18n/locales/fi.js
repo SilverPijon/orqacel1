@@ -1,5 +1,12 @@
 export default {
   "app.name": "Orqacel",
+  "quotations.document_title": "Tarjous",
+  "quotations.download_pdf": "Lataa PDF",
+  "quotations.generating_pdf": "Valmistellaan PDF-tiedostoa...",
+  "quotations.pdf_error": "PDF-tiedostoa ei voitu luoda. Yritä uudelleen.",
+  "quotations.page_of": "Sivu {current}/{total}",
+  "settings.registration_number": "Y-tunnus",
+  "settings.tax_number": "ALV-tunnus",
   "app.tagline": "Hoida palveluyritystäsi yhdessä paikassa",
 
   "nav.dashboard": "Etusivu",

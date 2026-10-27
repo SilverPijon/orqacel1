@@ -1,5 +1,12 @@
 export default {
   "app.name": "Orqacel",
+  "quotations.document_title": "Angebot",
+  "quotations.download_pdf": "PDF herunterladen",
+  "quotations.generating_pdf": "PDF wird erstellt...",
+  "quotations.pdf_error": "Das PDF konnte nicht erstellt werden. Bitte erneut versuchen.",
+  "quotations.page_of": "Seite {current} von {total}",
+  "settings.registration_number": "Handelsregisternummer",
+  "settings.tax_number": "USt-IdNr.",
   "app.tagline": "Führen Sie Ihr Servicegeschäft an einem Ort",
 
   "nav.dashboard": "Übersicht",

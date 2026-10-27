@@ -67,6 +67,11 @@
     "tax_amount": {
       "type": "number"
     },
+    "tax_rate_set": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when the tax rate was entered deliberately on this quotation, so an explicit 0% is distinguishable from an unspecified rate. Quotations saved before this field exists have no value and are treated as unspecified unless their rate is above zero."
+    },
     "total": {
       "type": "number"
     },

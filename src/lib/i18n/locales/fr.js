@@ -1,5 +1,12 @@
 export default {
   "app.name": "Orqacel",
+  "quotations.document_title": "Devis",
+  "quotations.download_pdf": "Télécharger le PDF",
+  "quotations.generating_pdf": "Préparation du PDF...",
+  "quotations.pdf_error": "Le PDF n'a pas pu être créé. Veuillez réessayer.",
+  "quotations.page_of": "Page {current} sur {total}",
+  "settings.registration_number": "Numéro d'immatriculation",
+  "settings.tax_number": "Numéro de TVA",
   "app.tagline": "Gérez votre activité de services en un seul endroit",
 
   "nav.dashboard": "Tableau de bord",

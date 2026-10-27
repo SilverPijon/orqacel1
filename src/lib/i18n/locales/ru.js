@@ -1,5 +1,12 @@
 export default {
   "app.name": "Orqacel",
+  "quotations.document_title": "Коммерческое предложение",
+  "quotations.download_pdf": "Скачать PDF",
+  "quotations.generating_pdf": "Подготовка PDF...",
+  "quotations.pdf_error": "Не удалось создать PDF. Попробуйте ещё раз.",
+  "quotations.page_of": "Страница {current} из {total}",
+  "settings.registration_number": "Регистрационный номер",
+  "settings.tax_number": "Номер НДС",
   "app.tagline": "Управляйте сервисным бизнесом в одном месте",
 
   "nav.dashboard": "Панель",

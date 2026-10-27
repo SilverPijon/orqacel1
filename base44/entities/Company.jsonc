@@ -9,6 +9,14 @@
     "legal_name": {
       "type": "string"
     },
+    "registration_number": {
+      "type": "string",
+      "description": "Optional company registration number, shown on documents when set"
+    },
+    "tax_number": {
+      "type": "string",
+      "description": "Optional VAT / tax registration number, shown on documents when set"
+    },
     "email": {
       "type": "string"
     },

@@ -1,5 +1,12 @@
 export default {
   "app.name": "Orqacel",
+  "quotations.document_title": "Piedāvājums",
+  "quotations.download_pdf": "Lejupielādēt PDF",
+  "quotations.generating_pdf": "Sagatavo PDF...",
+  "quotations.pdf_error": "PDF failu neizdevās izveidot. Lūdzu, mēģiniet vēlreiz.",
+  "quotations.page_of": "Lpp. {current} no {total}",
+  "settings.registration_number": "Reģistrācijas numurs",
+  "settings.tax_number": "PVN numurs",
   "app.tagline": "Pārvaldi savu pakalpojumu uzņēmumu vienā vietā",
 
   "nav.dashboard": "Panelis",

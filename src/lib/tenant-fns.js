@@ -15,6 +15,8 @@ import { invitationState, inviteExpiresAt } from "@/lib/invitations.server";
 
 const COMPANY_PROFILE = {
   legal_name: z.string().max(160).optional(),
+  registration_number: z.string().max(40).optional(),
+  tax_number: z.string().max(40).optional(),
   email: z.string().max(160).optional(),
   phone: z.string().max(40).optional(),
   website: z.string().max(160).optional(),

@@ -1,5 +1,12 @@
 export default {
   "app.name": "Orqacel",
+  "quotations.document_title": "Presupuesto",
+  "quotations.download_pdf": "Descargar PDF",
+  "quotations.generating_pdf": "Preparando el PDF...",
+  "quotations.pdf_error": "No se pudo crear el PDF. Inténtalo de nuevo.",
+  "quotations.page_of": "Página {current} de {total}",
+  "settings.registration_number": "Número de registro",
+  "settings.tax_number": "NIF / CIF",
   "app.tagline": "Gestiona tu negocio de servicios en un solo lugar",
 
   "nav.dashboard": "Panel",

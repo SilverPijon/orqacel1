@@ -14,6 +14,7 @@ import { useSession } from "@/lib/SessionContext";
 import { listClients } from "@/lib/clients-fns";
 import { createQuotation, updateQuotation } from "@/lib/quotations-fns";
 import { addDaysISO, formatMoney, round2, todayISO } from "@/lib/format";
+import { hasConfiguredVat, taxFlagForInput } from "@/lib/quotationTax";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 const EMPTY_LINE = { description: "", quantity: "1", unit_price: "0" };
@@ -25,7 +26,7 @@ function toFormState(quotation) {
       subject: "",
       issue_date: todayISO(),
       valid_until: addDaysISO(30),
-      tax_rate: "0",
+      tax_rate: "",
       notes: "",
       line_items: [{ ...EMPTY_LINE }],
     };
@@ -35,7 +36,9 @@ function toFormState(quotation) {
     subject: quotation.subject || "",
     issue_date: quotation.issue_date || todayISO(),
     valid_until: quotation.valid_until || "",
-    tax_rate: String(quotation.tax_rate ?? 0),
+    // A configured rate is shown; a rate nobody ever entered leaves the field empty instead of
+    // presenting a zero the user did not choose.
+    tax_rate: hasConfiguredVat(quotation) ? String(quotation.tax_rate ?? 0) : "",
     notes: quotation.notes || "",
     line_items: (quotation.line_items || []).length
       ? quotation.line_items.map((line) => ({
@@ -111,6 +114,7 @@ export default function QuotationForm({ quotation }) {
         issue_date: form.issue_date,
         valid_until: form.valid_until,
         tax_rate: Number(form.tax_rate) || 0,
+        tax_rate_set: taxFlagForInput(form.tax_rate),
         notes: form.notes,
         line_items: form.line_items.map((line) => ({
           description: line.description,
@@ -248,6 +252,7 @@ export default function QuotationForm({ quotation }) {
               max="100"
               step="0.01"
               value={form.tax_rate}
+              placeholder={t("common.optional")}
               onChange={(event) => update("tax_rate", event.target.value)}
               className="h-8 w-24"
             />

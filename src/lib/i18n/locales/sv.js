@@ -1,5 +1,12 @@
 export default {
   "app.name": "Orqacel",
+  "quotations.document_title": "Offert",
+  "quotations.download_pdf": "Ladda ner PDF",
+  "quotations.generating_pdf": "Förbereder PDF...",
+  "quotations.pdf_error": "PDF-filen kunde inte skapas. Försök igen.",
+  "quotations.page_of": "Sida {current} av {total}",
+  "settings.registration_number": "Organisationsnummer",
+  "settings.tax_number": "Momsregistreringsnummer",
   "app.tagline": "Driv din serviceverksamhet på ett ställe",
 
   "nav.dashboard": "Översikt",

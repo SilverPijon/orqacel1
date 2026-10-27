@@ -17,6 +17,7 @@ const QuotationInput = z.object({
   issue_date: z.string().max(30).optional(),
   valid_until: z.string().max(30).optional(),
   tax_rate: z.number().min(0).max(100).optional(),
+  tax_rate_set: z.boolean().optional(),
   notes: z.string().max(2000).optional(),
   line_items: z.array(LineItem).max(50).optional(),
 });
@@ -126,6 +127,7 @@ export const createQuotation = createServerFn({ method: "POST" })
       valid_until: data.valid_until || "",
       currency: session.activeCompany.currency || "EUR",
       notes: (data.notes || "").trim(),
+      tax_rate_set: data.tax_rate_set === true,
       ...totals,
     });
     return { id: created.id };
@@ -147,6 +149,7 @@ export const updateQuotation = createServerFn({ method: "POST" })
     if (data.issue_date !== undefined) patch.issue_date = data.issue_date;
     if (data.valid_until !== undefined) patch.valid_until = data.valid_until;
     if (data.notes !== undefined) patch.notes = data.notes.trim();
+    if (data.tax_rate_set !== undefined) patch.tax_rate_set = data.tax_rate_set === true;
 
     if (data.client_id && data.client_id !== existing.client_id) {
       const client = await resolveClient(context, session.activeCompany.id, data.client_id);

@@ -9,6 +9,7 @@ import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import DownloadQuotationPdfButton from "@/components/quotations/DownloadQuotationPdfButton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSession } from "@/lib/SessionContext";
 import {
@@ -18,6 +19,7 @@ import {
   updateQuotationStatus,
 } from "@/lib/quotations-fns";
 import { formatDate, formatMoney, round2 } from "@/lib/format";
+import { hasConfiguredVat } from "@/lib/quotationTax";
 import { QUOTATION_STATUS } from "@/lib/statusMeta";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
@@ -110,6 +112,7 @@ function QuotationDetailPage() {
 
       <PageHeader title={`${quotation.number}${quotation.subject ? ` · ${quotation.subject}` : ""}`} subtitle={quotation.client_name}>
         <StatusBadge label={t(meta.key)} tone={meta.tone} />
+        <DownloadQuotationPdfButton quotation={quotation} client={client} currency={currency} />
         <Button asChild variant="outline" className="gap-2">
           <Link to="/quotations/$quotationId/edit" params={{ quotationId: quotation.id }}>
             <Pencil className="h-4 w-4" />
@@ -183,12 +186,14 @@ function QuotationDetailPage() {
             <span className="text-sm text-muted-foreground">{t("common.subtotal")}</span>
             <span className="font-mono text-sm">{formatMoney(quotation.subtotal, currency, lang)}</span>
           </div>
-          <div className="flex w-full items-center justify-between gap-4 sm:w-64">
-            <span className="text-sm text-muted-foreground">
-              {t("common.tax")} ({quotation.tax_rate || 0}%)
-            </span>
-            <span className="font-mono text-sm">{formatMoney(quotation.tax_amount, currency, lang)}</span>
-          </div>
+          {hasConfiguredVat(quotation) ? (
+            <div className="flex w-full items-center justify-between gap-4 sm:w-64">
+              <span className="text-sm text-muted-foreground">
+                {t("common.tax")} ({quotation.tax_rate || 0}%)
+              </span>
+              <span className="font-mono text-sm">{formatMoney(quotation.tax_amount, currency, lang)}</span>
+            </div>
+          ) : null}
           <div className="flex w-full items-center justify-between gap-4 border-t border-border pt-2 sm:w-64">
             <span className="text-sm font-semibold">{t("common.total")}</span>
             <span className="font-mono text-base font-bold">{formatMoney(quotation.total, currency, lang)}</span>

@@ -71,7 +71,8 @@ export async function syncUserCompanies(service, userId) {
 }
 
 const COMPANY_FIELDS = [
-  "name", "legal_name", "email", "phone", "website", "address",
+  "name", "legal_name", "registration_number", "tax_number",
+  "email", "phone", "website", "address",
   "city", "postal_code", "country", "currency", "timezone",
   "default_language", "plan", "owner_user_id", "status",
 ];

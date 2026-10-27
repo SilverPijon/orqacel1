@@ -1,5 +1,12 @@
 export default {
   "app.name": "Orqacel",
+  "quotations.document_title": "Pakkumine",
+  "quotations.download_pdf": "Laadi PDF alla",
+  "quotations.generating_pdf": "PDF-i ettevalmistamine...",
+  "quotations.pdf_error": "PDF-i loomine ebaõnnestus. Palun proovi uuesti.",
+  "quotations.page_of": "Lk {current}/{total}",
+  "settings.registration_number": "Registrikood",
+  "settings.tax_number": "KMKR number",
   "app.tagline": "Juhi oma teenindusettevõtet ühes kohas",
 
   "nav.dashboard": "Töölaud",

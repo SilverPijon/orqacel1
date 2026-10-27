@@ -12,7 +12,8 @@ import { COUNTRY_CODES, CURRENCIES, TIMEZONES, countryLabel } from "@/lib/consta
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 const EMPTY = {
-  name: "", legal_name: "", email: "", phone: "", website: "",
+  name: "", legal_name: "", registration_number: "", tax_number: "",
+  email: "", phone: "", website: "",
   address: "", city: "", postal_code: "", country: "",
   currency: "EUR", timezone: "Europe/Tallinn", default_language: "en",
 };
@@ -82,6 +83,26 @@ export default function CompanyProfileForm() {
               value={form.legal_name}
               disabled={!canEdit}
               onChange={(event) => update("legal_name", event.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="company-registration">{t("settings.registration_number")}</Label>
+            <Input
+              id="company-registration"
+              className="mt-1.5"
+              value={form.registration_number}
+              disabled={!canEdit}
+              onChange={(event) => update("registration_number", event.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="company-tax">{t("settings.tax_number")}</Label>
+            <Input
+              id="company-tax"
+              className="mt-1.5"
+              value={form.tax_number}
+              disabled={!canEdit}
+              onChange={(event) => update("tax_number", event.target.value)}
             />
           </div>
           <div>

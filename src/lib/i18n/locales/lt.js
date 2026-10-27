@@ -1,5 +1,12 @@
 export default {
   "app.name": "Orqacel",
+  "quotations.document_title": "Pasiūlymas",
+  "quotations.download_pdf": "Atsisiųsti PDF",
+  "quotations.generating_pdf": "Rengiamas PDF...",
+  "quotations.pdf_error": "Nepavyko sukurti PDF failo. Bandykite dar kartą.",
+  "quotations.page_of": "Puslapis {current} iš {total}",
+  "settings.registration_number": "Įmonės kodas",
+  "settings.tax_number": "PVM mokėtojo kodas",
   "app.tagline": "Valdykite visą savo paslaugų verslą vienoje vietoje",
 
   "nav.dashboard": "Suvestinė",
