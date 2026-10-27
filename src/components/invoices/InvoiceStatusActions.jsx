@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import IssueWithoutBankDialog from "@/components/invoices/IssueWithoutBankDialog";
 import { isDraft } from "@/lib/invoiceLifecycle";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
@@ -11,6 +12,10 @@ export default function InvoiceStatusActions({ invoice, canManage, busy, onIssue
   const { t } = useI18n();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmingIssue, setConfirmingIssue] = useState(false);
+  // Where to pay is part of what an invoice is for, so issuing without it asks first — and then
+  // still goes ahead, because nothing is filled in on the person's behalf.
+  const hasBankDetails = Boolean(invoice.payment_snapshot?.iban || invoice.iban);
 
   if (!canManage) return null;
 
@@ -18,7 +23,11 @@ export default function InvoiceStatusActions({ invoice, canManage, busy, onIssue
     <>
       <div className="mt-6 flex flex-wrap gap-2">
         {isDraft(invoice) ? (
-          <Button className="gap-2" disabled={busy} onClick={onIssue}>
+          <Button
+            className="gap-2"
+            disabled={busy}
+            onClick={() => (hasBankDetails ? onIssue() : setConfirmingIssue(true))}
+          >
             <CheckCircle2 className="h-4 w-4" />
             {t("invoices.issue")}
           </Button>
@@ -50,6 +59,16 @@ export default function InvoiceStatusActions({ invoice, canManage, busy, onIssue
         onConfirm={() => {
           setConfirmingCancel(false);
           onCancel();
+        }}
+      />
+
+      <IssueWithoutBankDialog
+        open={confirmingIssue}
+        onOpenChange={setConfirmingIssue}
+        pending={busy}
+        onConfirm={() => {
+          setConfirmingIssue(false);
+          onIssue();
         }}
       />
 

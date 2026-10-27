@@ -17,7 +17,7 @@ import { useSession } from "@/lib/SessionContext";
 import { listBankAccounts } from "@/lib/bank-accounts-fns";
 import { pickDefaultAccount } from "@/lib/bankAccounts";
 import { formatIban } from "@/lib/iban";
-import { matchesCountryReferenceScheme, referenceStandardIdForCountry } from "@/lib/paymentReference";
+import { referenceProblem, referenceStandardIdForCountry } from "@/lib/paymentReference";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 // A detail the invoice takes from the chosen bank account: shown here, never typed here, so a
@@ -56,7 +56,9 @@ export default function InvoicePaymentFields({ value, onChange }) {
   const country = activeCompany?.country || "";
   const reference = value.payment_reference || "";
   const generatedReference = Boolean(referenceStandardIdForCountry(country));
-  const referenceLooksWrong = Boolean(reference) && !matchesCountryReferenceScheme({ reference, country });
+  // The same check the server runs before saving, so a reference that cannot be stored is flagged
+  // while it is being typed. A country without a domestic scheme is judged on shape only.
+  const referenceLooksWrong = Boolean(referenceProblem({ reference, country }));
 
   return (
     <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
@@ -123,7 +125,7 @@ export default function InvoicePaymentFields({ value, onChange }) {
             <Input
               id="invoice-reference"
               className="mt-1.5 font-mono"
-              inputMode="numeric"
+              inputMode={generatedReference ? "numeric" : "text"}
               value={reference}
               onChange={(event) => onChange("payment_reference", event.target.value)}
             />

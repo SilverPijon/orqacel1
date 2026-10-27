@@ -8,6 +8,8 @@
 //
 // Standards live in a registry rather than in the callers, so another country's scheme can be added
 // by adding one entry: each standard knows how to build a reference from a base and how to check one.
+// A country with no entry is never measured against another country's rules: its references are
+// judged on shape alone, so a legitimate international reference is not refused for being un-Estonian.
 
 // The repeating 7-3-1 weighting, read from the right — the Estonian and Finnish creditor reference.
 const WEIGHTS_731 = [7, 3, 1];
@@ -67,15 +69,26 @@ export function normalizeReference(value) {
   return String(value || "").replace(/\s/g, "");
 }
 
-// References in every scheme in use here are digits. Long enough to be a reference, short enough to
-// fit the field a bank expects.
-export function isValidReference(value) {
-  return /^\d{1,25}$/.test(normalizeReference(value));
-}
+// Long enough to be a reference, short enough to fit the field a bank expects.
+export const REFERENCE_MAX = 25;
 
-// True when a hand-entered reference carries the check digit its own country's scheme expects. A
-// country without a scheme is never judged.
-export function matchesCountryReferenceScheme({ reference, country }) {
+// The international shape: letters, digits, dashes and slashes — an ISO 11649 RF creditor reference,
+// or a customer's own reference with a year in it. Only applied where no domestic scheme exists.
+const INTERNATIONAL_REFERENCE = /^[A-Za-z0-9/-]+$/;
+
+// What is wrong with a hand-entered reference, as a code the server and the form both understand,
+// or null when there is nothing wrong with it. An empty value is not a problem: the reference is
+// then built from the invoice number.
+export function referenceProblem({ reference, country }) {
+  const value = normalizeReference(reference);
+  if (!value) return null;
+  if (value.length > REFERENCE_MAX) return "TOO_LONG";
+
   const standard = referenceStandardForCountry(country);
-  return standard ? standard.verify(normalizeReference(reference)) : true;
+  if (standard) {
+    if (!/^\d+$/.test(value)) return "DIGITS_ONLY";
+    return standard.verify(value) ? null : "BAD_CHECK_DIGIT";
+  }
+
+  return INTERNATIONAL_REFERENCE.test(value) ? null : "CHARSET";
 }

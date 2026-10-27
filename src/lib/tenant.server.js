@@ -75,6 +75,7 @@ const COMPANY_FIELDS = [
   "email", "phone", "website", "address",
   "city", "postal_code", "country", "currency", "timezone",
   "default_language", "plan", "owner_user_id", "status",
+  "default_bank_account_id",
 ];
 
 function pickCompany(company, role, membershipId) {

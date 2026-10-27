@@ -12,9 +12,13 @@
 
 // Returns how many records the write changed: 1 means this caller won, 0 means the invoice had
 // already moved on (or was never in the expected state) and nothing was written.
-export async function writeInvoiceIfStatus(service, { id, companyId, expectedStatus }, update) {
+//
+// `conditions` carries anything else the write has to be true for besides the status — in practice
+// the revision the caller read, so a write is refused when the invoice was edited in between rather
+// than applied onto content it never saw.
+export async function writeInvoiceIfStatus(service, { id, companyId, expectedStatus, conditions = {} }, update) {
   const result = await service.entities.Invoice.updateMany(
-    { id, company_id: companyId, status: expectedStatus },
+    { id, company_id: companyId, status: expectedStatus, ...conditions },
     update,
   );
   return Number(result?.updated || 0);

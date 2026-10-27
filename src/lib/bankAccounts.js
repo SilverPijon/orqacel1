@@ -40,15 +40,16 @@ export function sortAccounts(accounts) {
   });
 }
 
-// Only the fields the app works with ever leave the server.
-export function publicAccount(account) {
+// Only the fields the app works with ever leave the server. Which account is the default comes from
+// the company's single pointer, passed in, not from a flag stored on the account.
+export function publicAccount(account, defaultId = "") {
   return {
     id: account.id,
     account_holder: account.account_holder || "",
     iban: account.iban || "",
     bank_name: account.bank_name || "",
     bic: account.bic || "",
-    is_default: account.is_default === true,
+    is_default: Boolean(defaultId) && account.id === defaultId,
   };
 }
 

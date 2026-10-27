@@ -10,7 +10,7 @@ import { claimInvoiceNumber } from "@/lib/invoiceNumber.server";
 import { buildBuyerSnapshot, buildPaymentSnapshot, buildSellerSnapshot } from "@/lib/invoiceSnapshot.server";
 import { writeInvoiceIfStatus } from "@/lib/invoiceWrites.server";
 import { invoicePaymentValues } from "@/lib/bankAccounts";
-import { buildInvoiceReference, isValidReference, normalizeReference } from "@/lib/paymentReference";
+import { buildInvoiceReference, normalizeReference, referenceProblem } from "@/lib/paymentReference";
 
 // How far ahead a new invoice is due unless the user says otherwise.
 const DUE_DAYS = 14;
@@ -84,12 +84,29 @@ async function resolveBankAccount(service, companyId, accountId) {
 // one this invoice's own number produces. It is derived from the number, so it is the same value
 // every time it is asked for — and it is never recomputed for an invoice that has been issued,
 // because only drafts can be written at all. It is not the invoice number and never becomes one.
+// Why a reference was refused, in words the person can act on. A domestic scheme judges its own
+// check digit; a country without one is judged on shape alone, so an international reference is
+// never measured against Estonian rules.
+const REFERENCE_ERRORS = {
+  DIGITS_ONLY: "A payment reference for this country is made of digits only",
+  BAD_CHECK_DIGIT: "That payment reference does not pass its country's check digit",
+  CHARSET: "A payment reference may only contain letters, digits, - and /",
+  TOO_LONG: "That payment reference is too long",
+};
+
+function assertReference(reference, country) {
+  const problem = referenceProblem({ reference, country });
+  if (!problem) return;
+  throw httpError(400, REFERENCE_ERRORS[problem] || "That payment reference is not valid", problem);
+}
+
 function decideReference({ entered, invoiceNumber, country }) {
   const manual = normalizeReference(entered || "");
-  if (manual && !isValidReference(manual)) {
-    throw httpError(400, "A payment reference is made of digits only", "BAD_REFERENCE");
+  if (manual) {
+    assertReference(manual, country);
+    return manual;
   }
-  return manual || buildInvoiceReference({ invoiceNumber, country }) || "";
+  return buildInvoiceReference({ invoiceNumber, country }) || "";
 }
 
 const PAYMENT_FIELDS = [
@@ -116,6 +133,22 @@ function assertDraft(invoice) {
   if (!isDraft(invoice)) {
     throw httpError(409, "An issued or cancelled invoice can no longer be changed", "LOCKED_INVOICE");
   }
+}
+
+// Every draft write increases the invoice's revision, and issue/cancel require the revision the
+// caller read as part of the write condition. A payment snapshot is therefore never built from one
+// version of the invoice and written onto another: the stale transition loses and is reported.
+function revisionOf(invoice) {
+  return Number.isInteger(invoice?.revision) ? invoice.revision : null;
+}
+
+function revisionCondition(invoice) {
+  const revision = revisionOf(invoice);
+  return revision === null ? { revision: { $exists: false } } : { revision };
+}
+
+function nextRevision(invoice) {
+  return (revisionOf(invoice) || 0) + 1;
 }
 
 // Read back after a conditional write lost its race, so an error can name the state the invoice is
@@ -245,6 +278,7 @@ export const createInvoice = createServerFn({ method: "POST" })
       client_name: client.name,
       number,
       status: "draft",
+      revision: 1,
       issue_date: data.issue_date || todayISO(),
       due_date: data.due_date || addDaysISO(DUE_DAYS),
       currency: session.activeCompany.currency || "EUR",
@@ -315,9 +349,10 @@ export const updateInvoice = createServerFn({ method: "POST" })
 
     // Written only while the invoice is still the draft that was read: if it was issued in the
     // meantime the write does not apply, so an issued invoice can never be edited by a race.
+    patch.revision = nextRevision(existing);
     const written = await writeInvoiceIfStatus(
       service,
-      { id: data.id, companyId, expectedStatus: "draft" },
+      { id: data.id, companyId, expectedStatus: "draft", conditions: revisionCondition(existing) },
       { $set: patch },
     );
     if (written !== 1) throw conflictError("edit", await rereadInvoice(service, companyId, data.id));
@@ -348,11 +383,15 @@ export const setInvoiceStatus = createServerFn({ method: "POST" })
       // Issuing freezes the invoice. Both snapshots are refreshed from the records that are current
       // at this moment and stored in the same write as the status and the timestamp, so the frozen
       // values and the issued state can never disagree.
+      // A domestic reference has to be valid at the moment the invoice becomes final, whatever the
+      // draft carried before. A country without a scheme is judged on shape only.
+      assertReference(existing.payment_reference, session.activeCompany.country);
       const client = await findClient(context, companyId, existing.client_id);
       const account = await findBankAccount(service, companyId, existing.bank_account_id);
       patch = {
         status: "issued",
         issued_at: new Date().toISOString(),
+        revision: nextRevision(existing),
         seller_snapshot: buildSellerSnapshot(session.activeCompany),
         buyer_snapshot: client
           ? buildBuyerSnapshot(client)
@@ -364,14 +403,14 @@ export const setInvoiceStatus = createServerFn({ method: "POST" })
       };
     } else {
       // Cancelling voids the invoice but changes nothing about what it recorded.
-      patch = { status: "cancelled", cancelled_at: new Date().toISOString() };
+      patch = { status: "cancelled", cancelled_at: new Date().toISOString(), revision: nextRevision(existing) };
     }
 
     // The status that was read is part of the condition, so only one of two racing transitions can
     // apply and the record can never end in a pair of states at once.
     const written = await writeInvoiceIfStatus(
       service,
-      { id: data.id, companyId, expectedStatus: existing.status },
+      { id: data.id, companyId, expectedStatus: existing.status, conditions: revisionCondition(existing) },
       { $set: patch },
     );
     if (written !== 1) {

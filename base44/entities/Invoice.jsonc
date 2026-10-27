@@ -28,6 +28,11 @@
       "default": "draft",
       "description": "Draft invoices can still be edited. Issued invoices are frozen financial records. Cancelled invoices are kept for history. Transitions are validated and written conditionally on the server."
     },
+    "revision": {
+      "type": "number",
+      "default": 0,
+      "description": "Version of this invoice's editable content, increased by every draft write. Issue and cancel require the revision the caller read, so a payment snapshot is never built from one version of the invoice and written onto another."
+    },
     "issue_date": {
       "type": "string",
       "format": "date"
