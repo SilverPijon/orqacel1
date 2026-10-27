@@ -81,7 +81,16 @@ function pickCompany(company, role, membershipId) {
   COMPANY_FIELDS.forEach((field) => {
     if (company[field] !== undefined) picked[field] = company[field];
   });
-  return { ...picked, id: company.id, role, membershipId };
+  // The private logo reference stays on the server: only its presence and version are exposed,
+  // so the browser can tell whether a logo exists and when it changed, but never where it lives.
+  return {
+    ...picked,
+    id: company.id,
+    role,
+    membershipId,
+    has_logo: Boolean(company.logo_file_uri),
+    logo_updated_at: company.logo_updated_at || null,
+  };
 }
 
 // The single source of truth for "who is this caller, which company may they act on,

@@ -63,6 +63,23 @@
         "archived"
       ],
       "default": "active"
+    },
+    "logo_file_uri": {
+      "type": "string",
+      "description": "Private storage reference to the company logo. Written only by the app's server functions; never exposed to the browser."
+    },
+    "logo_content_type": {
+      "type": "string",
+      "description": "Content type verified from the stored file's own bytes: image/png, image/jpeg or image/webp"
+    },
+    "logo_size": {
+      "type": "number",
+      "description": "Verified size of the stored logo in bytes, capped at 2097152 (2 MB)"
+    },
+    "logo_updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the logo was last set, replaced or removed"
     }
   },
   "required": [
