@@ -342,7 +342,7 @@ export default {
   "invoices.add_item": "Position hinzufügen",
   "invoices.vat": "USt.",
   "invoices.vat_rate": "USt. %",
-  "invoices.vat_not_set": "Nicht festgelegt",
+  "invoices.vat_not_set": "Nicht gesetzt",
   "invoices.line": "Position",
   "invoices.vat_hint": "Lass die Umsatzsteuer leer, wenn keine anfällt, oder gib 0 für bewusste 0% ein.",
   "invoices.line_total": "Positionssumme",

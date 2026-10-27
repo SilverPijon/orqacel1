@@ -17,12 +17,15 @@ function NumberField({ label, value, onChange, max, placeholder }) {
   return (
     <div>
       <FieldLabel>{label}</FieldLabel>
+      {/* Entered values are shown at full contrast in weighted, aligned figures, so a lone default
+          1 or 0 is never mistaken for an empty field. */}
       <Input
         type="number"
         min="0"
         max={max}
         step="0.01"
         inputMode="decimal"
+        className="font-medium tabular-nums text-foreground"
         value={value}
         onChange={onChange}
         placeholder={placeholder}
@@ -75,7 +78,9 @@ export default function InvoiceLineRow({ line, index, lineTotal, currency, canRe
         <NumberField label={t("common.unit_price")} value={line.unit_price} onChange={set("unit_price")} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:contents">
+      {/* the two narrowest phones stack these instead, so the longest "not set" placeholder is never
+          squeezed into a field too small to show it */}
+      <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 lg:contents">
         <NumberField
           label={t("invoices.vat_rate")}
           value={line.vat_rate}
