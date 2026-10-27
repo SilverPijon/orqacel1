@@ -60,9 +60,14 @@ function DashboardPage() {
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label={t("dashboard.total_clients")} value={counts.clients} icon={Users} />
-        <StatCard label={t("dashboard.open_quotations")} value={counts.openQuotations} icon={FileText} />
-        <StatCard label={t("dashboard.active_jobs")} value={counts.activeJobs} icon={Briefcase} />
+        <StatCard label={t("dashboard.total_clients")} value={counts.clients} icon={Users} to="/clients" />
+        <StatCard
+          label={t("dashboard.open_quotations")}
+          value={counts.openQuotations}
+          icon={FileText}
+          to="/quotations"
+        />
+        <StatCard label={t("dashboard.active_jobs")} value={counts.activeJobs} icon={Briefcase} to="/jobs" />
         <StatCard
           label={t("dashboard.accepted_value")}
           value={formatMoney(counts.acceptedValue, currency, lang)}
