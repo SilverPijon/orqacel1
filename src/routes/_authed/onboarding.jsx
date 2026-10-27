@@ -65,7 +65,7 @@ function OnboardingPage() {
 
   return (
     <div className="mx-auto w-full max-w-xl">
-      <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+      <div className="rounded-2xl border border-border bg-card shadow-card p-6 sm:p-8">
         <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary">
           <Building2 className="h-5 w-5" />
         </span>

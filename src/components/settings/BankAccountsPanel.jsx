@@ -86,10 +86,10 @@ export default function BankAccountsPanel() {
   };
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+    <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
       <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="font-heading text-base font-semibold">{t("bank.title")}</h2>
+          <h2 className="type-section-title">{t("bank.title")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{t("bank.desc")}</p>
         </div>
         {canEdit ? (

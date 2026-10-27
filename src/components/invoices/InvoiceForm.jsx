@@ -159,7 +159,7 @@ export default function InvoiceForm({ invoice }) {
 
   return (
     <form onSubmit={submit} className="space-y-6">
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label>{t("invoices.customer")}</Label>
@@ -203,8 +203,8 @@ export default function InvoiceForm({ invoice }) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-        <h2 className="mb-4 font-heading text-sm font-semibold">{t("invoices.line_items")}</h2>
+      <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
+        <h2 className="mb-4 type-section-title">{t("invoices.line_items")}</h2>
         <InvoiceLinesEditor
           lines={form.line_items}
           lineTotals={totals.line_items.map((line) => line.line_total)}
@@ -225,7 +225,7 @@ export default function InvoiceForm({ invoice }) {
         frozen={invoice?.payment_snapshot || null}
       />
 
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
         <Label htmlFor="invoice-notes">{t("common.notes")}</Label>
         <Textarea
           id="invoice-notes"

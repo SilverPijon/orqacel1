@@ -98,7 +98,7 @@ function ClientDetailPage() {
         ) : null}
       </PageHeader>
 
-      <section className="rounded-2xl border border-border bg-card p-5">
+      <section className="rounded-2xl border border-border bg-card shadow-card p-5">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge label={client.status === "archived" ? t("clients.archived") : t("clients.active")} tone={client.status === "archived" ? "muted" : "success"} />
           {client.created_date ? (
@@ -136,9 +136,9 @@ function ClientDetailPage() {
       </section>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-card">
+        <section className="rounded-2xl border border-border bg-card shadow-card">
           <header className="border-b border-border px-5 py-3.5">
-            <h2 className="font-heading text-sm font-semibold">{t("clients.related_quotations")}</h2>
+            <h2 className="type-section-title">{t("clients.related_quotations")}</h2>
           </header>
           <div className="divide-y divide-border">
             {quotationsQuery.data?.items?.length ? (
@@ -151,7 +151,7 @@ function ClientDetailPage() {
                 >
                   <span className="truncate text-sm font-medium">{quotation.number}</span>
                   <span className="flex shrink-0 items-center gap-2">
-                    <span className="font-mono text-xs font-semibold">
+                    <span className="font-mono text-xs font-semibold tabular-nums">
                       {formatMoney(quotation.total, quotation.currency || currency, lang)}
                     </span>
                     <StatusBadge
@@ -167,9 +167,9 @@ function ClientDetailPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card">
+        <section className="rounded-2xl border border-border bg-card shadow-card">
           <header className="border-b border-border px-5 py-3.5">
-            <h2 className="font-heading text-sm font-semibold">{t("clients.related_jobs")}</h2>
+            <h2 className="type-section-title">{t("clients.related_jobs")}</h2>
           </header>
           <div className="divide-y divide-border">
             {jobsQuery.data?.items?.length ? (

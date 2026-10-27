@@ -17,7 +17,7 @@ export default function ClientsTable({ clients, onEdit, onDelete, canDelete }) {
   const { t } = useI18n();
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
       <Table>
         <TableHeader>
           <TableRow>

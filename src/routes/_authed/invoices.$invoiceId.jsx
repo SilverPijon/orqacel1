@@ -105,7 +105,7 @@ function InvoiceDetailPage() {
         ) : null}
       </PageHeader>
 
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("invoices.customer")}</p>

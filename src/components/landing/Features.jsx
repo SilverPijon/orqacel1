@@ -17,7 +17,7 @@ export default function Features() {
       <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((feature) => (
-            <div key={feature.title} className="rounded-2xl border border-border bg-card p-5">
+            <div key={feature.title} className="rounded-2xl border border-border bg-card shadow-card p-5">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
                 <feature.icon className="h-5 w-5" />
               </span>

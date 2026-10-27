@@ -12,19 +12,19 @@ export default function InvoiceTotalsSummary({ totals, currency, vatConfigured }
     <div className="flex flex-col gap-2 sm:items-end">
       <div className="flex w-full items-center justify-between gap-4 sm:w-72">
         <span className="text-sm text-muted-foreground">{t("common.subtotal")}</span>
-        <span className="font-mono text-sm">{formatMoney(totals?.subtotal || 0, currency, lang)}</span>
+        <span className="font-mono text-sm tabular-nums">{formatMoney(totals?.subtotal || 0, currency, lang)}</span>
       </div>
       {summary.map((row) => (
         <div key={row.rate} className="flex w-full items-center justify-between gap-4 sm:w-72">
           <span className="text-sm text-muted-foreground">
             {t("invoices.vat")} ({row.rate}%)
           </span>
-          <span className="font-mono text-sm">{formatMoney(row.amount, currency, lang)}</span>
+          <span className="font-mono text-sm tabular-nums">{formatMoney(row.amount, currency, lang)}</span>
         </div>
       ))}
       <div className="flex w-full items-center justify-between gap-4 border-t border-border pt-2 sm:w-72">
         <span className="text-sm font-semibold">{t("common.total")}</span>
-        <span className="font-mono text-base font-bold">{formatMoney(totals?.total || 0, currency, lang)}</span>
+        <span className="font-mono text-base font-bold tabular-nums">{formatMoney(totals?.total || 0, currency, lang)}</span>
       </div>
     </div>
   );

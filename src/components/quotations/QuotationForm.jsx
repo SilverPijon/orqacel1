@@ -136,7 +136,7 @@ export default function QuotationForm({ quotation }) {
 
   return (
     <form onSubmit={submit} className="space-y-6">
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label>{t("quotations.client")}</Label>
@@ -186,9 +186,9 @@ export default function QuotationForm({ quotation }) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
         <div className="mb-4 flex items-center justify-between gap-2">
-          <h2 className="font-heading text-sm font-semibold">{t("quotations.line_items")}</h2>
+          <h2 className="type-section-title">{t("quotations.line_items")}</h2>
           <Button type="button" variant="outline" size="sm" className="gap-2" onClick={addLine}>
             <Plus className="h-4 w-4" />
             {t("quotations.add_item")}
@@ -242,7 +242,7 @@ export default function QuotationForm({ quotation }) {
         <div className="mt-6 flex flex-col gap-3 border-t border-border pt-4 sm:items-end">
           <div className="flex w-full items-center justify-between gap-4 sm:w-64">
             <span className="text-sm text-muted-foreground">{t("common.subtotal")}</span>
-            <span className="font-mono text-sm">{formatMoney(totals.subtotal, currency, lang)}</span>
+            <span className="font-mono text-sm tabular-nums">{formatMoney(totals.subtotal, currency, lang)}</span>
           </div>
           <div className="flex w-full items-center justify-between gap-4 sm:w-64">
             <span className="text-sm text-muted-foreground">{t("common.tax_rate")}</span>
@@ -259,16 +259,16 @@ export default function QuotationForm({ quotation }) {
           </div>
           <div className="flex w-full items-center justify-between gap-4 sm:w-64">
             <span className="text-sm text-muted-foreground">{t("common.tax")}</span>
-            <span className="font-mono text-sm">{formatMoney(totals.taxAmount, currency, lang)}</span>
+            <span className="font-mono text-sm tabular-nums">{formatMoney(totals.taxAmount, currency, lang)}</span>
           </div>
           <div className="flex w-full items-center justify-between gap-4 border-t border-border pt-2 sm:w-64">
             <span className="text-sm font-semibold">{t("common.total")}</span>
-            <span className="font-mono text-base font-bold">{formatMoney(totals.total, currency, lang)}</span>
+            <span className="font-mono text-base font-bold tabular-nums">{formatMoney(totals.total, currency, lang)}</span>
           </div>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
         <Label htmlFor="quotation-notes">{t("common.notes")}</Label>
         <Textarea
           id="quotation-notes"

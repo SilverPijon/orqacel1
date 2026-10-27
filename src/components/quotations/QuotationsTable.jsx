@@ -18,7 +18,7 @@ export default function QuotationsTable({ quotations, currency, onEdit, onDelete
   const { t, lang } = useI18n();
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -57,7 +57,7 @@ export default function QuotationsTable({ quotations, currency, onEdit, onDelete
                   tone={QUOTATION_STATUS[quotation.status]?.tone}
                 />
               </TableCell>
-              <TableCell className="text-right font-mono text-xs font-semibold">
+              <TableCell className="text-right font-mono text-xs font-semibold tabular-nums">
                 {formatMoney(quotation.total, quotation.currency || currency, lang)}
               </TableCell>
               <TableCell>

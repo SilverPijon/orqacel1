@@ -44,10 +44,10 @@ export default function InvitationCard({ invitation, onChanged }) {
   };
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5">
+    <section className="rounded-2xl border border-border bg-card shadow-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="font-heading text-base font-semibold">
+          <h2 className="type-section-title">
             {invitation.company_name || t("common.none")}
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">

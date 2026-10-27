@@ -100,9 +100,9 @@ function DashboardPage() {
       ) : null}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-card">
+        <section className="rounded-2xl border border-border bg-card shadow-card">
           <header className="flex items-center justify-between gap-2 border-b border-border px-5 py-3.5">
-            <h2 className="font-heading text-sm font-semibold">{t("dashboard.recent_quotations")}</h2>
+            <h2 className="type-section-title">{t("dashboard.recent_quotations")}</h2>
             <Link to="/quotations" className="text-xs font-medium text-primary hover:underline">
               {t("dashboard.view_all")}
             </Link>
@@ -122,7 +122,7 @@ function DashboardPage() {
                     </span>
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
-                    <span className="font-mono text-xs font-semibold">
+                    <span className="font-mono text-xs font-semibold tabular-nums">
                       {formatMoney(quotation.total, quotation.currency || currency, lang)}
                     </span>
                     <StatusBadge
@@ -138,9 +138,9 @@ function DashboardPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card">
+        <section className="rounded-2xl border border-border bg-card shadow-card">
           <header className="flex items-center justify-between gap-2 border-b border-border px-5 py-3.5">
-            <h2 className="font-heading text-sm font-semibold">{t("dashboard.recent_jobs")}</h2>
+            <h2 className="type-section-title">{t("dashboard.recent_jobs")}</h2>
             <Link to="/jobs" className="text-xs font-medium text-primary hover:underline">
               {t("dashboard.view_all")}
             </Link>

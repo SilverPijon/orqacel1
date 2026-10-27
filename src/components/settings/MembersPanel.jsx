@@ -92,9 +92,9 @@ export default function MembersPanel() {
   };
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+    <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
       <header className="mb-5">
-        <h2 className="font-heading text-base font-semibold">{t("settings.members")}</h2>
+        <h2 className="type-section-title">{t("settings.members")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t("settings.members_desc")}</p>
       </header>
 
@@ -106,7 +106,7 @@ export default function MembersPanel() {
         </div>
       ) : (
         <>
-          <h3 className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <h3 className="mb-2 mt-6 type-group-label">
             {t("settings.active_members")}
           </h3>
           <div className="divide-y divide-border rounded-xl border border-border">
@@ -126,7 +126,7 @@ export default function MembersPanel() {
             ))}
           </div>
 
-          <h3 className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <h3 className="mb-2 mt-6 type-group-label">
             {t("settings.pending_invitations")}
           </h3>
           <div className="divide-y divide-border rounded-xl border border-border">

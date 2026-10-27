@@ -24,12 +24,12 @@ export default function InvoiceLinesTable({ lines, currency }) {
             lines.map((line, index) => (
               <TableRow key={index}>
                 <TableCell>{line.description || "—"}</TableCell>
-                <TableCell className="text-right font-mono text-xs">{line.quantity}</TableCell>
-                <TableCell className="text-right font-mono text-xs">
+                <TableCell className="text-right font-mono text-xs tabular-nums">{line.quantity}</TableCell>
+                <TableCell className="text-right font-mono text-xs tabular-nums">
                   {formatMoney(line.unit_price, currency, lang)}
                 </TableCell>
-                <TableCell className="text-right font-mono text-xs">{`${line.vat_rate || 0}%`}</TableCell>
-                <TableCell className="text-right font-mono text-xs font-semibold">
+                <TableCell className="text-right font-mono text-xs tabular-nums">{`${line.vat_rate || 0}%`}</TableCell>
+                <TableCell className="text-right font-mono text-xs tabular-nums font-semibold">
                   {formatMoney(line.line_total, currency, lang)}
                 </TableCell>
               </TableRow>

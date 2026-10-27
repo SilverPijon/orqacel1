@@ -89,9 +89,9 @@ export default function CompanyLogoPanel() {
   };
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+    <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
       <header className="mb-5">
-        <h2 className="font-heading text-base font-semibold">{t("logo.title")}</h2>
+        <h2 className="type-section-title">{t("logo.title")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t("logo.desc")}</p>
       </header>
 

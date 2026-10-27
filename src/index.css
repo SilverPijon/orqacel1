@@ -44,7 +44,15 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    /* Radius system: 8px controls · 12px cards/panels · 4px small elements · full for pills */
+    --radius: 0.5rem;          /* 8px — controls (buttons, inputs, selects) */
+    --radius-sm: 4px;          /* small elements (checkboxes, chips) */
+    --radius-card: 12px;       /* cards, panels, dialogs, menus */
+
+    /* Subtle elevation system — one value per surface role */
+    --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
+    --shadow-panel: 0 4px 12px -2px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.04);
+
     --font-heading: ui-sans-serif, system-ui, sans-serif;
     --font-body: ui-sans-serif, system-ui, sans-serif;
     --font-display: ui-sans-serif, system-ui, sans-serif;
@@ -123,5 +131,44 @@
 
   body {
     @apply bg-background text-foreground font-body;
+  }
+}
+
+/* Typography hierarchy — the single source of truth for type roles.
+   Page title → section heading → body → label → meta, plus numeric display. */
+@layer components {
+  .type-page-title {
+    @apply font-heading text-2xl font-semibold tracking-tight;
+  }
+
+  .type-section-title {
+    @apply font-heading text-base font-semibold leading-snug;
+  }
+
+  .type-body {
+    @apply text-sm leading-6;
+  }
+
+  .type-label {
+    @apply text-sm font-medium leading-none;
+  }
+
+  .type-meta {
+    @apply text-xs leading-5 text-muted-foreground;
+  }
+
+  .type-group-label {
+    @apply text-xs font-semibold uppercase tracking-wide text-muted-foreground;
+  }
+
+  /* Dashboard metrics: tabular figures so digits line up across cards. Long
+     currency values wrap inside the card instead of overflowing it. */
+  .type-metric {
+    @apply font-heading text-2xl font-semibold tracking-tight tabular-nums break-words;
+  }
+
+  /* Financial amounts, quantities and other aligned numbers. */
+  .num {
+    @apply tabular-nums;
   }
 }

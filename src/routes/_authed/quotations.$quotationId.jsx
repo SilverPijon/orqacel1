@@ -121,7 +121,7 @@ function QuotationDetailPage() {
         </Button>
       </PageHeader>
 
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("quotations.for_client")}</p>
@@ -161,11 +161,11 @@ function QuotationDetailPage() {
                 lines.map((line, index) => (
                   <TableRow key={index}>
                     <TableCell>{line.description || "—"}</TableCell>
-                    <TableCell className="text-right font-mono text-xs">{line.quantity}</TableCell>
-                    <TableCell className="text-right font-mono text-xs">
+                    <TableCell className="text-right font-mono text-xs tabular-nums">{line.quantity}</TableCell>
+                    <TableCell className="text-right font-mono text-xs tabular-nums">
                       {formatMoney(line.unit_price, currency, lang)}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs font-semibold">
+                    <TableCell className="text-right font-mono text-xs tabular-nums font-semibold">
                       {formatMoney(round2((line.quantity || 0) * (line.unit_price || 0)), currency, lang)}
                     </TableCell>
                   </TableRow>
@@ -184,19 +184,19 @@ function QuotationDetailPage() {
         <div className="mt-5 flex flex-col gap-2 sm:items-end">
           <div className="flex w-full items-center justify-between gap-4 sm:w-64">
             <span className="text-sm text-muted-foreground">{t("common.subtotal")}</span>
-            <span className="font-mono text-sm">{formatMoney(quotation.subtotal, currency, lang)}</span>
+            <span className="font-mono text-sm tabular-nums">{formatMoney(quotation.subtotal, currency, lang)}</span>
           </div>
           {hasConfiguredVat(quotation) ? (
             <div className="flex w-full items-center justify-between gap-4 sm:w-64">
               <span className="text-sm text-muted-foreground">
                 {t("common.tax")} ({quotation.tax_rate || 0}%)
               </span>
-              <span className="font-mono text-sm">{formatMoney(quotation.tax_amount, currency, lang)}</span>
+              <span className="font-mono text-sm tabular-nums">{formatMoney(quotation.tax_amount, currency, lang)}</span>
             </div>
           ) : null}
           <div className="flex w-full items-center justify-between gap-4 border-t border-border pt-2 sm:w-64">
             <span className="text-sm font-semibold">{t("common.total")}</span>
-            <span className="font-mono text-base font-bold">{formatMoney(quotation.total, currency, lang)}</span>
+            <span className="font-mono text-base font-bold tabular-nums">{formatMoney(quotation.total, currency, lang)}</span>
           </div>
         </div>
 

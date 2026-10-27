@@ -18,7 +18,7 @@ export default function JobsTable({ jobs, currency, onEdit, onDelete, canDelete 
   const { t, lang } = useI18n();
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -56,7 +56,7 @@ export default function JobsTable({ jobs, currency, onEdit, onDelete, canDelete 
                   tone={JOB_STATUS[job.status]?.tone}
                 />
               </TableCell>
-              <TableCell className="text-right font-mono text-xs font-semibold">
+              <TableCell className="text-right font-mono text-xs font-semibold tabular-nums">
                 {formatMoney(job.price, job.currency || currency, lang)}
               </TableCell>
               <TableCell>

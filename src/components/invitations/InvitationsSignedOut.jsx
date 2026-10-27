@@ -14,8 +14,8 @@ export default function InvitationsSignedOut() {
   const { t } = useI18n();
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6 text-center">
-      <h2 className="font-heading text-base font-semibold">{t("invitations.sign_in_title")}</h2>
+    <section className="rounded-2xl border border-border bg-card shadow-card p-6 text-center">
+      <h2 className="type-section-title">{t("invitations.sign_in_title")}</h2>
       <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">{t("invitations.sign_in_desc")}</p>
       <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
         <Button asChild>

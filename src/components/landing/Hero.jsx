@@ -15,7 +15,7 @@ export default function Hero() {
       <div className="pointer-events-none absolute inset-x-0 -top-40 h-96 bg-gradient-to-b from-primary/15 to-transparent" />
       <div className="relative mx-auto grid w-full max-w-6xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-24">
         <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card shadow-card px-3 py-1 text-xs font-medium text-muted-foreground">
             <ShieldCheck className="h-3.5 w-3.5 text-primary" />
             {t("landing.badge")}
           </span>

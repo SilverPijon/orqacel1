@@ -11,7 +11,7 @@ export default function StatCard({ label, value, hint, icon: Icon, to, className
   const content = (
     <>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="type-label text-muted-foreground">{label}</p>
         {Icon ? (
           <span
             className={cn(
@@ -23,14 +23,14 @@ export default function StatCard({ label, value, hint, icon: Icon, to, className
           </span>
         ) : null}
       </div>
-      <p className="mt-3 font-heading text-2xl font-bold tracking-tight">{value}</p>
-      {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
+      <p className="mt-3 type-metric">{value}</p>
+      {hint ? <p className="mt-1 type-meta">{hint}</p> : null}
     </>
   );
 
   if (!to) {
     return (
-      <div className={cn("rounded-2xl border border-border bg-card p-5", className)}>{content}</div>
+      <div className={cn("rounded-2xl border border-border bg-card shadow-card p-5", className)}>{content}</div>
     );
   }
 
@@ -38,7 +38,7 @@ export default function StatCard({ label, value, hint, icon: Icon, to, className
     <Link
       to={to}
       className={cn(
-        "group block rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "group block rounded-2xl border border-border bg-card shadow-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,
       )}
     >

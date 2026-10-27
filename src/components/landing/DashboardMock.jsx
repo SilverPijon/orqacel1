@@ -24,7 +24,7 @@ export default function DashboardMock() {
     })[tone];
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 shadow-xl shadow-primary/5 sm:p-6">
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-panel sm:p-6">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <p className="font-heading text-sm font-semibold">{t("dashboard.title")}</p>

@@ -7,10 +7,31 @@ export default {
   theme: {
   	extend: {
   		opacity: Object.fromEntries(Array.from({ length: 101 }, (_, i) => [i, `${i / 100}`])),
+  		/* One radius per role: 8px controls, 12px cards/panels, 4px small elements.
+  		   Legacy names (2xl, lg) resolve to the same role values so existing
+  		   surfaces cannot drift apart. */
   		borderRadius: {
+  			sm: 'var(--radius-sm)',
+  			DEFAULT: 'var(--radius)',
+  			md: 'var(--radius)',
   			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			xl: 'var(--radius-card)',
+  			'2xl': 'var(--radius-card)',
+  			full: '9999px'
+  		},
+  		boxShadow: {
+  			card: 'var(--shadow-card)',
+  			panel: 'var(--shadow-panel)'
+  		},
+  		/* Spacing is a 4px grid. The default scale's 2px half-steps are folded onto
+  		   the nearest grid step (0.5→4px, 1.5→8px, 2.5→12px, 3.5→16px) so padding,
+  		   gaps and margins can never land off-grid. All other steps keep their
+  		   4px-multiple defaults (1 = 4px, 2 = 8px, 3 = 12px, 4 = 16px, …). */
+  		spacing: {
+  			'0.5': '4px',
+  			'1.5': '8px',
+  			'2.5': '12px',
+  			'3.5': '16px'
   		},
   		colors: {
   			background: 'hsl(var(--background))',

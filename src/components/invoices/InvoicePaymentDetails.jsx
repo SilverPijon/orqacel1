@@ -43,8 +43,8 @@ export default function InvoicePaymentDetails({ invoice }) {
       : "";
 
   return (
-    <section className="mt-6 rounded-2xl border border-border bg-card p-5 sm:p-6">
-      <h2 className="mb-4 font-heading text-base font-semibold">{t("payments.title")}</h2>
+    <section className="mt-6 rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
+      <h2 className="mb-4 type-section-title">{t("payments.title")}</h2>
 
       {hasDetails ? (
         <div className="grid gap-4 sm:grid-cols-3">

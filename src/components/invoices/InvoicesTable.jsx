@@ -19,7 +19,7 @@ export default function InvoicesTable({ invoices, onEdit, onDelete, canManage })
   const { t, lang } = useI18n();
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -62,7 +62,7 @@ export default function InvoicesTable({ invoices, onEdit, onDelete, canManage })
                   tone={INVOICE_STATUS[invoice.status]?.tone}
                 />
               </TableCell>
-              <TableCell className="text-right font-mono text-xs font-semibold">
+              <TableCell className="text-right font-mono text-xs font-semibold tabular-nums">
                 {/* The currency the invoice was written in, never the company's current one. */}
                 {formatMoney(invoice.total, invoice.currency || "EUR", lang)}
               </TableCell>

@@ -10,7 +10,7 @@ export function AuthLayout({ icon: Icon, title, subtitle, footer, children }) {
           <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
           {subtitle && <p className="mt-2 text-muted-foreground">{subtitle}</p>}
         </div>
-        <div className="rounded-2xl border border-border bg-card p-8 text-card-foreground shadow-sm">{children}</div>
+        <div className="rounded-2xl border border-border bg-card p-8 text-card-foreground shadow-card">{children}</div>
         {footer && <p className="mt-6 text-center text-sm text-muted-foreground">{footer}</p>}
       </div>
     </div>

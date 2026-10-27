@@ -97,7 +97,7 @@ function JobDetailPage() {
         </Button>
       </PageHeader>
 
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
         <dl className="grid gap-4 sm:grid-cols-3">
           {[
             { label: t("quotations.client"), value: job.client_name },
@@ -109,7 +109,7 @@ function JobDetailPage() {
           ].map((row) => (
             <div key={row.label}>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">{row.label}</dt>
-              <dd className={`mt-1 text-sm ${row.isMoney ? "font-mono font-semibold" : ""}`}>{row.value || "—"}</dd>
+              <dd className={`mt-1 text-sm ${row.isMoney ? "font-mono font-semibold tabular-nums" : ""}`}>{row.value || "—"}</dd>
             </div>
           ))}
         </dl>
