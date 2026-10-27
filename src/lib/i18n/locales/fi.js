@@ -117,6 +117,7 @@ export default {
   "dashboard.total_clients": "Asiakkaat",
   "dashboard.open_quotations": "Avoimet tarjoukset",
   "dashboard.active_jobs": "Aktiiviset työt",
+  "dashboard.issued_invoices": "Lähetetyt laskut",
   "dashboard.accepted_value": "Hyväksytty arvo",
   "dashboard.recent_quotations": "Uusimmat tarjoukset",
   "dashboard.recent_jobs": "Uusimmat työt",

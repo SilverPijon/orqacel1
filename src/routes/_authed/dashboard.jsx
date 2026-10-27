@@ -2,7 +2,7 @@ import React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Briefcase, FileText, Loader2, Plus, TrendingUp, Users } from "lucide-react";
+import { Briefcase, FileText, Loader2, Plus, Receipt, TrendingUp, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
@@ -40,7 +40,7 @@ function DashboardPage() {
   }
 
   const data = query.data;
-  const counts = data?.counts || { clients: 0, openQuotations: 0, activeJobs: 0, acceptedValue: 0 };
+  const counts = data?.counts || { clients: 0, openQuotations: 0, issuedInvoices: 0, activeJobs: 0, acceptedValue: 0 };
 
   return (
     <div>
@@ -59,7 +59,7 @@ function DashboardPage() {
         </Button>
       </PageHeader>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard label={t("dashboard.total_clients")} value={counts.clients} icon={Users} to="/clients" />
         <StatCard
           label={t("dashboard.open_quotations")}
@@ -67,11 +67,18 @@ function DashboardPage() {
           icon={FileText}
           to="/quotations"
         />
+        <StatCard
+          label={t("dashboard.issued_invoices")}
+          value={counts.issuedInvoices}
+          icon={Receipt}
+          to="/invoices"
+        />
         <StatCard label={t("dashboard.active_jobs")} value={counts.activeJobs} icon={Briefcase} to="/jobs" />
         <StatCard
           label={t("dashboard.accepted_value")}
           value={formatMoney(counts.acceptedValue, currency, lang)}
           icon={TrendingUp}
+          className="sm:col-span-2 xl:col-span-1"
         />
       </div>
 

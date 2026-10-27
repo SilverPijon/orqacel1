@@ -117,6 +117,7 @@ export default {
   "dashboard.total_clients": "Klienci",
   "dashboard.open_quotations": "Otwarte oferty",
   "dashboard.active_jobs": "Aktywne zlecenia",
+  "dashboard.issued_invoices": "Wystawione faktury",
   "dashboard.accepted_value": "Zaakceptowana wartość",
   "dashboard.recent_quotations": "Najnowsze oferty",
   "dashboard.recent_jobs": "Najnowsze zlecenia",

@@ -117,6 +117,7 @@ export default {
   "dashboard.total_clients": "Kliendid",
   "dashboard.open_quotations": "Avatud pakkumised",
   "dashboard.active_jobs": "Aktiivsed tööd",
+  "dashboard.issued_invoices": "Väljastatud arved",
   "dashboard.accepted_value": "Kinnitatud summa",
   "dashboard.recent_quotations": "Viimased pakkumised",
   "dashboard.recent_jobs": "Viimased tööd",

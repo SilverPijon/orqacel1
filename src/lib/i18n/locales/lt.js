@@ -117,6 +117,7 @@ export default {
   "dashboard.total_clients": "Klientai",
   "dashboard.open_quotations": "Atviri pasiūlymai",
   "dashboard.active_jobs": "Aktyvūs darbai",
+  "dashboard.issued_invoices": "Išrašytos sąskaitos",
   "dashboard.accepted_value": "Patvirtinta vertė",
   "dashboard.recent_quotations": "Naujausi pasiūlymai",
   "dashboard.recent_jobs": "Naujausi darbai",

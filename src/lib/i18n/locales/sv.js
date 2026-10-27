@@ -117,6 +117,7 @@ export default {
   "dashboard.total_clients": "Kunder",
   "dashboard.open_quotations": "Öppna offerter",
   "dashboard.active_jobs": "Aktiva jobb",
+  "dashboard.issued_invoices": "Utfärdade fakturor",
   "dashboard.accepted_value": "Accepterat värde",
   "dashboard.recent_quotations": "Senaste offerterna",
   "dashboard.recent_jobs": "Senaste jobben",

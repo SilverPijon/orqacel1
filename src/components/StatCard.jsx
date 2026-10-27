@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
  * Pass `to` to make the whole card a navigation shortcut (one link, no nested
  * interactive elements). Without `to` it renders as a plain, non-interactive card.
  */
-export default function StatCard({ label, value, hint, icon: Icon, to }) {
+export default function StatCard({ label, value, hint, icon: Icon, to, className }) {
   const content = (
     <>
       <div className="flex items-center justify-between gap-3">
@@ -29,13 +29,18 @@ export default function StatCard({ label, value, hint, icon: Icon, to }) {
   );
 
   if (!to) {
-    return <div className="rounded-2xl border border-border bg-card p-5">{content}</div>;
+    return (
+      <div className={cn("rounded-2xl border border-border bg-card p-5", className)}>{content}</div>
+    );
   }
 
   return (
     <Link
       to={to}
-      className="group block rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className={cn(
+        "group block rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        className,
+      )}
     >
       {content}
     </Link>

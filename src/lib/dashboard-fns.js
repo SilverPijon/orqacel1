@@ -7,12 +7,15 @@ export const getDashboard = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const session = await requireCompanyContext(context);
     const companyId = session.activeCompany.id;
-    const { Client, Quotation, Job } = context.getBase44().entities;
+    const { Client, Quotation, Job, Invoice } = context.getBase44().entities;
 
-    const [clients, openQuotations, activeJobs, accepted, recentQuotations, recentJobs] = await Promise.all([
+    const [clients, openQuotations, activeJobs, issuedInvoices, accepted, recentQuotations, recentJobs] = await Promise.all([
       Client.count({ company_id: companyId }),
       Quotation.count({ company_id: companyId, status: { $in: ["draft", "sent"] } }),
       Job.count({ company_id: companyId, status: { $in: ["scheduled", "in_progress"] } }),
+      // Issued invoices are the ones still outstanding: an issued invoice is frozen and payable,
+      // and the invoice carries no separate "paid" state to subtract.
+      Invoice.count({ company_id: companyId, status: "issued" }),
       Quotation.aggregate({ query: { company_id: companyId, status: "accepted" }, sum: ["total"] }),
       Quotation.filter({ company_id: companyId }, { sort: "-created_date", limit: 5 }),
       Job.filter({ company_id: companyId }, { sort: "-created_date", limit: 5 }),
@@ -23,6 +26,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         clients,
         openQuotations,
         activeJobs,
+        issuedInvoices,
         acceptedValue: Number(accepted?.rows?.[0]?.sum_total || 0),
       },
       recentQuotations: asArray(recentQuotations).map((quotation) => ({
