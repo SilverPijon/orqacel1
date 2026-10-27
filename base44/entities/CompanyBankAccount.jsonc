@@ -1,0 +1,52 @@
+{
+  "name": "CompanyBankAccount",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Owning company \u2014 the tenant boundary. An account is never readable or writable outside its own company."
+    },
+    "account_holder": {
+      "type": "string",
+      "description": "Name the account is held in, shown on the invoice as the payee"
+    },
+    "iban": {
+      "type": "string",
+      "description": "International bank account number, stored without spaces and in upper case. Its country length and check digits are verified on the server before it is saved."
+    },
+    "bank_name": {
+      "type": "string",
+      "description": "Optional bank name"
+    },
+    "bic": {
+      "type": "string",
+      "description": "Optional BIC/SWIFT code, stored without spaces and in upper case"
+    },
+    "is_default": {
+      "type": "boolean",
+      "default": false,
+      "description": "The company's default account, preselected on new invoices. At most one account per company carries it. Written only by the app's server functions."
+    }
+  },
+  "required": [
+    "company_id",
+    "account_holder",
+    "iban"
+  ],
+  "rls": {
+    "read": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "create": {
+      "created_by_id": "__app_users_may_not_write_bank_accounts__"
+    },
+    "update": {
+      "created_by_id": "__app_users_may_not_write_bank_accounts__"
+    },
+    "delete": {
+      "created_by_id": "__app_users_may_not_write_bank_accounts__"
+    }
+  }
+}

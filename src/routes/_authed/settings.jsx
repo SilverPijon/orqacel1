@@ -2,6 +2,7 @@ import React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import PageHeader from "@/components/PageHeader";
 import CompanyLogoPanel from "@/components/settings/CompanyLogoPanel";
+import BankAccountsPanel from "@/components/settings/BankAccountsPanel";
 import CompanyProfileForm from "@/components/settings/CompanyProfileForm";
 import MembersPanel from "@/components/settings/MembersPanel";
 import AccountPanel from "@/components/settings/AccountPanel";
@@ -21,6 +22,7 @@ function SettingsPage() {
       <div className="space-y-6">
         <CompanyProfileForm />
         <CompanyLogoPanel />
+        <BankAccountsPanel />
         <MembersPanel />
         <AccountPanel />
       </div>

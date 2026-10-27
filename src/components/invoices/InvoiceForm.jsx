@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import InvoiceLinesEditor from "@/components/invoices/InvoiceLinesEditor";
 import InvoiceTotalsSummary from "@/components/invoices/InvoiceTotalsSummary";
+import InvoicePaymentFields from "@/components/invoices/InvoicePaymentFields";
 import { useSession } from "@/lib/SessionContext";
 import { listClients } from "@/lib/clients-fns";
 import { createInvoice, updateInvoice } from "@/lib/invoices-fns";
@@ -22,6 +23,19 @@ import { useI18n } from "@/lib/i18n/I18nContext";
 const DUE_DAYS = 14;
 const EMPTY_LINE = { description: "", quantity: "1", unit_price: "0", vat_rate: "" };
 
+// Nothing is prefilled for the payment details of a new invoice: the bank account is chosen from the
+// company's saved accounts (its default is preselected), and the reference is produced from the
+// invoice number on the server unless someone writes one here.
+const EMPTY_PAYMENT = {
+  bank_account_id: "",
+  payment_reference: "",
+  payment_description: "",
+  payment_terms: "",
+  service_date: "",
+  service_period_start: "",
+  service_period_end: "",
+};
+
 function toFormState(invoice) {
   if (!invoice) {
     return {
@@ -30,6 +44,7 @@ function toFormState(invoice) {
       due_date: addDaysISO(DUE_DAYS),
       notes: "",
       line_items: [{ ...EMPTY_LINE }],
+      payment: { ...EMPTY_PAYMENT },
     };
   }
   // A stored rate above zero is shown; so is a zero that was entered deliberately. A rate nobody
@@ -40,6 +55,17 @@ function toFormState(invoice) {
     issue_date: invoice.issue_date || todayISO(),
     due_date: invoice.due_date || "",
     notes: invoice.notes || "",
+    // The reference the invoice already carries is shown as it is, so a stored one is never silently
+    // rebuilt and a hand-entered one is never overwritten.
+    payment: {
+      bank_account_id: invoice.bank_account_id || "",
+      payment_reference: invoice.payment_reference || "",
+      payment_description: invoice.payment_description || "",
+      payment_terms: invoice.payment_terms || "",
+      service_date: invoice.service_date || "",
+      service_period_start: invoice.service_period_start || "",
+      service_period_end: invoice.service_period_end || "",
+    },
     line_items: (invoice.line_items || []).length
       ? invoice.line_items.map((line) => ({
           description: line.description || "",
@@ -79,6 +105,8 @@ export default function InvoiceForm({ invoice }) {
   const vatConfigured = hasConfiguredInvoiceVat({ vat_rate_set: vatRateSet, line_items: totals.line_items });
 
   const update = (field, value) => setForm((previous) => ({ ...previous, [field]: value }));
+  const updatePayment = (field, value) =>
+    setForm((previous) => ({ ...previous, payment: { ...previous.payment, [field]: value } }));
   const updateLine = (index, field, value) =>
     setForm((previous) => ({
       ...previous,
@@ -106,6 +134,9 @@ export default function InvoiceForm({ invoice }) {
         issue_date: form.issue_date,
         due_date: form.due_date,
         notes: form.notes,
+        // The payment details as entered: the bank account by id, which the server resolves inside
+        // this company, and the values that are stored on the invoice.
+        ...form.payment,
         vat_rate_set: vatRateSet,
         line_items: form.line_items.map((line) => ({
           description: line.description,
@@ -186,6 +217,8 @@ export default function InvoiceForm({ invoice }) {
           <InvoiceTotalsSummary totals={totals} currency={currency} vatConfigured={vatConfigured} />
         </div>
       </section>
+
+      <InvoicePaymentFields value={form.payment} onChange={updatePayment} />
 
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
         <Label htmlFor="invoice-notes">{t("common.notes")}</Label>

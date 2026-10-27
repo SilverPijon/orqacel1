@@ -7,8 +7,10 @@ import { escapeRegex } from "@/lib/search";
 import { computeInvoiceTotals } from "@/lib/invoiceTotals";
 import { INVOICE_STATUSES, canTransition, isDraft } from "@/lib/invoiceLifecycle";
 import { claimInvoiceNumber } from "@/lib/invoiceNumber.server";
-import { buildBuyerSnapshot, buildSellerSnapshot } from "@/lib/invoiceSnapshot.server";
+import { buildBuyerSnapshot, buildPaymentSnapshot, buildSellerSnapshot } from "@/lib/invoiceSnapshot.server";
 import { writeInvoiceIfStatus } from "@/lib/invoiceWrites.server";
+import { invoicePaymentValues } from "@/lib/bankAccounts";
+import { buildInvoiceReference, isValidReference, normalizeReference } from "@/lib/paymentReference";
 
 // How far ahead a new invoice is due unless the user says otherwise.
 const DUE_DAYS = 14;
@@ -27,6 +29,15 @@ const InvoiceInput = z.object({
   notes: z.string().max(2000).optional(),
   vat_rate_set: z.boolean().optional(),
   line_items: z.array(InvoiceLine).max(50).optional(),
+  // Payment details. The bank account is named only by id and is always resolved inside the caller's
+  // own company; every value the invoice displays about it is read from that record on the server.
+  bank_account_id: z.string().max(64).optional(),
+  payment_reference: z.string().max(40).optional(),
+  payment_description: z.string().max(200).optional(),
+  payment_terms: z.string().max(500).optional(),
+  service_date: z.string().max(30).optional(),
+  service_period_start: z.string().max(30).optional(),
+  service_period_end: z.string().max(30).optional(),
 });
 
 // A customer of another company is indistinguishable from one that does not exist.
@@ -49,6 +60,47 @@ async function resolveClient(context, companyId, clientId) {
   }
   return client;
 }
+
+// The bank account an invoice's own record points at. Company-scoped even when the id comes from the
+// invoice rather than the browser, and never an error: a deleted account simply resolves to nothing.
+async function findBankAccount(service, companyId, accountId) {
+  if (!accountId) return null;
+  const account = await service.entities.CompanyBankAccount.get(accountId).catch(() => null);
+  return account && account.company_id === companyId ? account : null;
+}
+
+// The bank account a caller selected. An account of another company is refused outright, so a
+// browser-supplied id can never be used to read or copy details across tenants.
+async function resolveBankAccount(service, companyId, accountId) {
+  if (!accountId) return null;
+  const account = await findBankAccount(service, companyId, accountId);
+  if (!account) {
+    throw httpError(400, "That bank account doesn't belong to this company", "BAD_BANK_ACCOUNT");
+  }
+  return account;
+}
+
+// The payment reference an invoice keeps: the one entered by hand when there is one, otherwise the
+// one this invoice's own number produces. It is derived from the number, so it is the same value
+// every time it is asked for — and it is never recomputed for an invoice that has been issued,
+// because only drafts can be written at all. It is not the invoice number and never becomes one.
+function decideReference({ entered, invoiceNumber, country }) {
+  const manual = normalizeReference(entered || "");
+  if (manual && !isValidReference(manual)) {
+    throw httpError(400, "A payment reference is made of digits only", "BAD_REFERENCE");
+  }
+  return manual || buildInvoiceReference({ invoiceNumber, country }) || "";
+}
+
+const PAYMENT_FIELDS = [
+  "bank_account_id",
+  "payment_reference",
+  "payment_description",
+  "payment_terms",
+  "service_date",
+  "service_period_start",
+  "service_period_end",
+];
 
 // Loads an invoice only if it belongs to the caller's active company, so another company's invoice
 // is indistinguishable from one that doesn't exist.
@@ -173,6 +225,20 @@ export const createInvoice = createServerFn({ method: "POST" })
     // corrected afterwards: two invoices can never share a number and none is ever renumbered.
     const number = await claimInvoiceNumber(service, companyId);
 
+    // The bank account is resolved inside this company and the details it holds at this moment are
+    // copied onto the invoice. The reference follows from the number this invoice has just received,
+    // unless the user entered one. A company with no account saved simply produces no bank details:
+    // nothing is ever invented to fill the gap.
+    const account = await resolveBankAccount(service, companyId, data.bank_account_id);
+    const payment = {
+      ...invoicePaymentValues({ account, existing: null, input: data }),
+      payment_reference: decideReference({
+        entered: data.payment_reference,
+        invoiceNumber: number,
+        country: session.activeCompany.country,
+      }),
+    };
+
     const draft = await service.entities.Invoice.create({
       company_id: companyId,
       client_id: client.id,
@@ -184,9 +250,11 @@ export const createInvoice = createServerFn({ method: "POST" })
       currency: session.activeCompany.currency || "EUR",
       notes: (data.notes || "").trim(),
       vat_rate_set: data.vat_rate_set === true,
-      // Both identities are captured now and frozen again in the write that issues the invoice.
+      ...payment,
+      // Both identities and the payment details are captured now and frozen again at issue.
       seller_snapshot: buildSellerSnapshot(session.activeCompany),
       buyer_snapshot: buildBuyerSnapshot(client),
+      payment_snapshot: buildPaymentSnapshot({ invoice: payment, account }),
       ...computeInvoiceTotals(data.line_items),
     });
 
@@ -216,6 +284,31 @@ export const updateInvoice = createServerFn({ method: "POST" })
       patch.buyer_snapshot = buildBuyerSnapshot(client);
     }
     if (data.line_items !== undefined) Object.assign(patch, computeInvoiceTotals(data.line_items));
+
+    if (PAYMENT_FIELDS.some((field) => data[field] !== undefined)) {
+      // A newly chosen account must belong to this company; an id that does not is refused. When the
+      // account is left as it was, the invoice's own account is read again, so a draft follows the
+      // fix someone made in the company's bank settings while it was open.
+      const account =
+        data.bank_account_id !== undefined
+          ? await resolveBankAccount(service, companyId, data.bank_account_id)
+          : await findBankAccount(service, companyId, existing.bank_account_id);
+
+      const input = { ...data };
+      if (data.payment_reference !== undefined) {
+        input.payment_reference = decideReference({
+          entered: data.payment_reference,
+          invoiceNumber: existing.number,
+          country: session.activeCompany.country,
+        });
+      }
+
+      const values = invoicePaymentValues({ account, existing, input });
+      Object.assign(patch, values);
+      // The details are stored on the invoice itself rather than looked up at display time, so what
+      // it shows stays fixed from here on even if the company's bank settings change again.
+      patch.payment_snapshot = buildPaymentSnapshot({ invoice: { ...existing, ...values }, account });
+    }
 
     // The number is assigned once, at creation, and is never part of an update.
     if (!Object.keys(patch).length) return { id: data.id, number: existing.number };
@@ -256,6 +349,7 @@ export const setInvoiceStatus = createServerFn({ method: "POST" })
       // at this moment and stored in the same write as the status and the timestamp, so the frozen
       // values and the issued state can never disagree.
       const client = await findClient(context, companyId, existing.client_id);
+      const account = await findBankAccount(service, companyId, existing.bank_account_id);
       patch = {
         status: "issued",
         issued_at: new Date().toISOString(),
@@ -263,6 +357,10 @@ export const setInvoiceStatus = createServerFn({ method: "POST" })
         buyer_snapshot: client
           ? buildBuyerSnapshot(client)
           : existing.buyer_snapshot || { name: existing.client_name || "" },
+        // The payment details are frozen in the same write as the status and the timestamp, so an
+        // issued invoice can never show details other than the ones it was issued with. The payment
+        // reference is carried over untouched: it is never regenerated after issue.
+        payment_snapshot: buildPaymentSnapshot({ invoice: existing, account }),
       };
     } else {
       // Cancelling voids the invoice but changes nothing about what it recorded.

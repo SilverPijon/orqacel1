@@ -16,7 +16,7 @@
     },
     "number": {
       "type": "string",
-      "description": "Company-scoped invoice number, claimed from the company's counter and stored when the invoice is created. Never renumbered, never reused."
+      "description": "Company-scoped invoice number, claimed from the company's counter and stored when the invoice is created. Never renumbered, never reused. It is not the payment reference."
     },
     "status": {
       "type": "string",
@@ -106,6 +106,37 @@
       "type": "number",
       "description": "subtotal + vat_amount"
     },
+    "bank_account_id": {
+      "type": "string",
+      "description": "The company bank account chosen for this invoice. Kept for reference only: what the invoice shows comes from its own payment snapshot. The account is always resolved inside the invoice's own company."
+    },
+    "payment_reference": {
+      "type": "string",
+      "description": "Payment reference the customer quotes when paying, generated from the invoice number or entered by hand. It is not the invoice number, it is never regenerated once the invoice is issued, and it never changes by itself."
+    },
+    "payment_description": {
+      "type": "string",
+      "description": "Text the customer sees on their bank statement"
+    },
+    "payment_terms": {
+      "type": "string",
+      "description": "Payment terms shown with the invoice, for example the payment deadline"
+    },
+    "service_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the service was delivered, when a single date describes it"
+    },
+    "service_period_start": {
+      "type": "string",
+      "format": "date",
+      "description": "Start of the service period, when a period describes the delivery"
+    },
+    "service_period_end": {
+      "type": "string",
+      "format": "date",
+      "description": "End of the service period"
+    },
     "seller_snapshot": {
       "type": "object",
       "description": "The seller's identity as it was when the invoice was issued, frozen into the invoice. Written by the app's server functions only, and never again after the invoice is issued, so editing the company profile cannot change an invoice that already exists.",
@@ -179,6 +210,43 @@
           "type": "string"
         },
         "tax_id": {
+          "type": "string"
+        }
+      }
+    },
+    "payment_snapshot": {
+      "type": "object",
+      "description": "How this invoice is paid, frozen into the invoice when it is created and again in the same write that issues it. Written by the app's server functions only, so changing a company bank account later can never change an invoice that already exists.",
+      "properties": {
+        "account_holder": {
+          "type": "string"
+        },
+        "iban": {
+          "type": "string"
+        },
+        "bank_name": {
+          "type": "string"
+        },
+        "bic": {
+          "type": "string"
+        },
+        "reference": {
+          "type": "string",
+          "description": "Payment reference frozen with the invoice. Never regenerated after issue."
+        },
+        "description": {
+          "type": "string"
+        },
+        "terms": {
+          "type": "string"
+        },
+        "service_date": {
+          "type": "string"
+        },
+        "service_period_start": {
+          "type": "string"
+        },
+        "service_period_end": {
           "type": "string"
         }
       }

@@ -11,6 +11,7 @@ import EmptyState from "@/components/EmptyState";
 import InvoiceLinesTable from "@/components/invoices/InvoiceLinesTable";
 import InvoiceTotalsSummary from "@/components/invoices/InvoiceTotalsSummary";
 import InvoiceStatusActions from "@/components/invoices/InvoiceStatusActions";
+import InvoicePaymentDetails from "@/components/invoices/InvoicePaymentDetails";
 import { useSession } from "@/lib/SessionContext";
 import { deleteInvoice, getInvoice, setInvoiceStatus } from "@/lib/invoices-fns";
 import { formatDate } from "@/lib/format";
@@ -151,6 +152,8 @@ function InvoiceDetailPage() {
           </div>
         ) : null}
       </section>
+
+      <InvoicePaymentDetails invoice={invoice} />
 
       {invoice.status === "issued" ? (
         <p className="mt-4 text-sm text-muted-foreground">{t("invoices.issued_note")}</p>

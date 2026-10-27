@@ -56,3 +56,52 @@ export function buildSellerSnapshot(company) {
 export function buildBuyerSnapshot(client) {
   return pick(client, BUYER_FIELDS);
 }
+
+// The fields that make up the payment details of an invoice.
+const PAYMENT_FIELDS = [
+  "account_holder",
+  "iban",
+  "bank_name",
+  "bic",
+  "reference",
+  "description",
+  "terms",
+  "service_date",
+  "service_period_start",
+  "service_period_end",
+];
+
+// How an invoice is paid, as the invoice itself keeps it. Called when the invoice is created and when
+// a draft is edited, and again in the same write that issues it.
+//
+// `account` is the live company bank account when one is still there: the values it holds at that
+// moment are what gets captured. When it has since been deleted, the details the invoice already
+// carries are kept instead, so an invoice that showed where to pay never ends up with nothing.
+export function buildPaymentSnapshot({ invoice, account }) {
+  const identity = account
+    ? {
+        account_holder: account.account_holder,
+        iban: account.iban,
+        bank_name: account.bank_name,
+        bic: account.bic,
+      }
+    : {
+        account_holder: invoice?.account_holder || invoice?.payment_snapshot?.account_holder || "",
+        iban: invoice?.iban || invoice?.payment_snapshot?.iban || "",
+        bank_name: invoice?.bank_name || invoice?.payment_snapshot?.bank_name || "",
+        bic: invoice?.bic || invoice?.payment_snapshot?.bic || "",
+      };
+
+  return pick(
+    {
+      ...identity,
+      reference: invoice?.payment_reference || "",
+      description: invoice?.payment_description || "",
+      terms: invoice?.payment_terms || "",
+      service_date: invoice?.service_date || "",
+      service_period_start: invoice?.service_period_start || "",
+      service_period_end: invoice?.service_period_end || "",
+    },
+    PAYMENT_FIELDS,
+  );
+}
