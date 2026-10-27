@@ -42,7 +42,9 @@ export default function Hero() {
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline">
-                  <Link to="/login">{t("landing.cta_sign_in")}</Link>
+                  <Link to="/login" search={{ returnTo: "/dashboard" }}>
+                    {t("landing.cta_sign_in")}
+                  </Link>
                 </Button>
               </>
             )}
