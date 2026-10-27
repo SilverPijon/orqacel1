@@ -31,6 +31,13 @@ export function pickDefaultAccount(accounts) {
   return list.find((account) => account.is_default === true) || list[0] || null;
 }
 
+// Whether what an invoice is about to freeze actually tells the customer where to pay. Only a real
+// IBAN counts: a snapshot carrying something that is not one leaves the customer unable to pay, so it
+// is treated exactly like having no bank details at all.
+export function hasPaymentIban(snapshot) {
+  return isValidIban(snapshot?.iban || "");
+}
+
 // Default first, then by holder and IBAN, so the list reads the same way everywhere.
 export function sortAccounts(accounts) {
   return [...(Array.isArray(accounts) ? accounts : [])].sort((a, b) => {

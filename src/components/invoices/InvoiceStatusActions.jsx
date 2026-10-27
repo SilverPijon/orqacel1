@@ -4,18 +4,20 @@ import { Button } from "@/components/ui/button";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import IssueWithoutBankDialog from "@/components/invoices/IssueWithoutBankDialog";
 import { isDraft } from "@/lib/invoiceLifecycle";
+import { hasPaymentIban } from "@/lib/bankAccounts";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 // Issuing freezes the invoice, cancelling voids it while keeping it on record, and only a draft may
 // be deleted. Members see none of these actions; the server refuses them regardless of the UI.
-export default function InvoiceStatusActions({ invoice, canManage, busy, onIssue, onCancel, onDelete }) {
+export default function InvoiceStatusActions({ invoice, payment, canManage, busy, onIssue, onCancel, onDelete }) {
   const { t } = useI18n();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingIssue, setConfirmingIssue] = useState(false);
-  // Where to pay is part of what an invoice is for, so issuing without it asks first — and then
-  // still goes ahead, because nothing is filled in on the person's behalf.
-  const hasBankDetails = Boolean(invoice.payment_snapshot?.iban || invoice.iban);
+  // Where to pay is part of what an invoice is for, so issuing without it asks first — and then still
+  // goes ahead, because nothing is filled in on the person's behalf. `payment` is the snapshot the
+  // server will freeze when it issues, so the question is asked about the invoice that will exist.
+  const hasBankDetails = hasPaymentIban(payment);
 
   if (!canManage) return null;
 

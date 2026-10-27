@@ -164,6 +164,7 @@ function InvoiceDetailPage() {
 
       <InvoiceStatusActions
         invoice={invoice}
+        payment={query.data?.payment}
         canManage={permissions.canManage}
         busy={busy}
         onIssue={() => changeStatus("issued")}

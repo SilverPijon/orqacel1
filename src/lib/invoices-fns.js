@@ -241,7 +241,13 @@ export const getInvoice = createServerFn({ method: "GET" })
     // returned only so a link to it can be offered while the customer still exists.
     const client = await findClient(context, session.activeCompany.id, invoice.client_id);
 
-    return { invoice, client };
+    // The payment details issuing would freeze, built by the same function the issue write uses and
+    // from the same account: the live one when it is still there, otherwise what the invoice already
+    // carries. The page decides whether issuing needs a warning from this object, so its verdict is
+    // the content of the invoice that will exist rather than the draft's own older snapshot.
+    const account = await findBankAccount(context.getBase44(), session.activeCompany.id, invoice.bank_account_id);
+
+    return { invoice, client, payment: buildPaymentSnapshot({ invoice, account }) };
   });
 
 // Creating, editing, issuing, cancelling and deleting are owner/admin work: members read.
