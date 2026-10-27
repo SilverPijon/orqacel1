@@ -55,7 +55,7 @@ export default {
   "common.new": "Uus",
   "common.total": "Kokku",
   "common.subtotal": "Vahesumma",
-  "common.tax": "Maks",
+  "common.tax": "Käibemaks",
   "common.tax_rate": "Maksumäär (%)",
   "common.saved": "Salvestatud",
   "common.error": "Midagi läks valesti. Palun proovi uuesti.",
