@@ -326,13 +326,18 @@ export const updateInvoice = createServerFn({ method: "POST" })
     if (data.line_items !== undefined) Object.assign(patch, computeInvoiceTotals(data.line_items));
 
     if (PAYMENT_FIELDS.some((field) => data[field] !== undefined)) {
-      // A newly chosen account must belong to this company; an id that does not is refused. When the
-      // account is left as it was, the invoice's own account is read again, so a draft follows the
-      // fix someone made in the company's bank settings while it was open.
-      const account =
-        data.bank_account_id !== undefined
-          ? await resolveBankAccount(service, companyId, data.bank_account_id)
-          : await findBankAccount(service, companyId, existing.bank_account_id);
+      // A newly chosen account must belong to this company; an id that does not is refused. An id the
+      // draft already carries is its own choice rather than a new one, so it is looked up without
+      // being refused: a draft whose account has since been deleted still saves, keeping the details
+      // frozen into it. An empty id is someone clearing the account on purpose.
+      const requested = data.bank_account_id;
+      const clearing = requested === "";
+      const switched = requested !== undefined && requested !== (existing.bank_account_id || "");
+      const account = switched
+        ? clearing
+          ? null
+          : await resolveBankAccount(service, companyId, requested)
+        : await findBankAccount(service, companyId, existing.bank_account_id);
 
       const input = { ...data };
       if (data.payment_reference !== undefined) {
@@ -343,11 +348,12 @@ export const updateInvoice = createServerFn({ method: "POST" })
         });
       }
 
-      const values = invoicePaymentValues({ account, existing, input });
+      const values = invoicePaymentValues({ account, existing, input, dropBankDetails: clearing });
       Object.assign(patch, values);
       // The details are stored on the invoice itself rather than looked up at display time, so what
-      // it shows stays fixed from here on even if the company's bank settings change again.
-      patch.payment_snapshot = buildPaymentSnapshot({ invoice: { ...existing, ...values }, account });
+      // it shows stays fixed from here on even if the company's bank settings change again. Built
+      // from the values just written, so clearing the account really clears it.
+      patch.payment_snapshot = buildPaymentSnapshot({ invoice: values, account });
     }
 
     // The number is assigned once, at creation, and is never part of an update.

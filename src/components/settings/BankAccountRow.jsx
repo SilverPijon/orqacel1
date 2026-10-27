@@ -1,5 +1,5 @@
 import React from "react";
-import { Pencil, Star, Trash2 } from "lucide-react";
+import { Pencil, Star, StarOff, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatIban } from "@/lib/iban";
@@ -7,7 +7,7 @@ import { useI18n } from "@/lib/i18n/I18nContext";
 
 // One saved bank account. Owners and admins get the controls; members only ever see the details,
 // which their invoices need, and the server refuses a change from a member regardless of the UI.
-export default function BankAccountRow({ account, canEdit, busy, onEdit, onDelete, onMakeDefault }) {
+export default function BankAccountRow({ account, canEdit, busy, onEdit, onDelete, onMakeDefault, onRemoveDefault }) {
   const { t } = useI18n();
 
   return (
@@ -27,7 +27,18 @@ export default function BankAccountRow({ account, canEdit, busy, onEdit, onDelet
 
       {canEdit ? (
         <div className="flex shrink-0 items-center gap-1">
-          {account.is_default ? null : (
+          {account.is_default ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+              disabled={busy}
+              onClick={() => onRemoveDefault(account)}
+            >
+              <StarOff className="h-4 w-4" />
+              {t("bank.remove_default")}
+            </Button>
+          ) : (
             <Button variant="ghost" size="sm" className="gap-2" disabled={busy} onClick={() => onMakeDefault(account)}>
               <Star className="h-4 w-4" />
               {t("bank.set_default")}

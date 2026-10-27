@@ -8,7 +8,13 @@ import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import BankAccountFormDialog from "@/components/settings/BankAccountFormDialog";
 import BankAccountRow from "@/components/settings/BankAccountRow";
 import { useSession } from "@/lib/SessionContext";
-import { createBankAccount, deleteBankAccount, listBankAccounts, updateBankAccount } from "@/lib/bank-accounts-fns";
+import {
+  clearDefaultBankAccount,
+  createBankAccount,
+  deleteBankAccount,
+  listBankAccounts,
+  updateBankAccount,
+} from "@/lib/bank-accounts-fns";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 // The company's bank accounts, the place an invoice takes its payment details from. Managing them is
@@ -22,6 +28,7 @@ export default function BankAccountsPanel() {
   const createFn = useServerFn(createBankAccount);
   const updateFn = useServerFn(updateBankAccount);
   const deleteFn = useServerFn(deleteBankAccount);
+  const clearDefaultFn = useServerFn(clearDefaultBankAccount);
   const [editing, setEditing] = useState(null);
   const [removing, setRemoving] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -70,6 +77,9 @@ export default function BankAccountsPanel() {
       }),
     );
 
+  // A company may keep no default at all: new invoices then start with no account chosen.
+  const removeDefault = () => run(() => clearDefaultFn());
+
   const remove = async () => {
     const removed = await run(() => deleteFn({ data: { id: removing.id } }));
     if (removed) setRemoving(null);
@@ -105,6 +115,7 @@ export default function BankAccountsPanel() {
               onEdit={setEditing}
               onDelete={setRemoving}
               onMakeDefault={makeDefault}
+              onRemoveDefault={removeDefault}
             />
           ))}
         </div>
@@ -116,7 +127,11 @@ export default function BankAccountsPanel() {
       )}
 
       <p className="mt-4 text-xs text-muted-foreground">
-        {canEdit ? t("bank.default_hint") : t("bank.members_readonly")}
+        {canEdit
+          ? accounts.some((account) => account.is_default)
+            ? t("bank.default_hint")
+            : t("bank.no_default")
+          : t("bank.members_readonly")}
       </p>
 
       <BankAccountFormDialog

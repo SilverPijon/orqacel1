@@ -23,12 +23,12 @@ export function readBankAccountInput(input) {
   return { value: { account_holder: accountHolder, iban, bank_name: bankName, bic } };
 }
 
-// The account an invoice starts from: the company's default, or the first one when nothing is marked
-// default yet. Returns null when the company has no accounts at all — an invoice is never given
-// bank details that do not exist.
+// The account a new invoice starts from: only the one the company explicitly marked as its default.
+// There is no fallback to another account — an invoice with no default starts with nothing chosen,
+// because which account money goes to is a decision only the person making the invoice can make.
 export function pickDefaultAccount(accounts) {
   const list = Array.isArray(accounts) ? accounts : [];
-  return list.find((account) => account.is_default === true) || list[0] || null;
+  return list.find((account) => account.is_default === true) || null;
 }
 
 // Whether what an invoice is about to freeze actually tells the customer where to pay. Only a real
@@ -74,16 +74,20 @@ export function paymentIdentityFromAccount(account) {
 
 // The payment details an invoice holds after a write: the bank identity copied from the selected
 // account, and the text entered on the invoice itself.
-export function invoicePaymentValues({ account, existing, input }) {
+// `dropBankDetails` is someone clearing the account on purpose, which empties the identity. Without
+// it, an account that is gone leaves the details the invoice already carries exactly as they are.
+export function invoicePaymentValues({ account, existing, input, dropBankDetails = false }) {
   const identity = account
     ? paymentIdentityFromAccount(account)
-    : {
-        bank_account_id: existing?.bank_account_id || "",
-        account_holder: existing?.payment_snapshot?.account_holder || "",
-        iban: existing?.payment_snapshot?.iban || "",
-        bank_name: existing?.payment_snapshot?.bank_name || "",
-        bic: existing?.payment_snapshot?.bic || "",
-      };
+    : dropBankDetails
+      ? paymentIdentityFromAccount(null)
+      : {
+          bank_account_id: existing?.bank_account_id || "",
+          account_holder: existing?.payment_snapshot?.account_holder || "",
+          iban: existing?.payment_snapshot?.iban || "",
+          bank_name: existing?.payment_snapshot?.bank_name || "",
+          bic: existing?.payment_snapshot?.bic || "",
+        };
 
   const text = (field, fallback) =>
     input?.[field] !== undefined ? String(input[field] || "").trim() : fallback;

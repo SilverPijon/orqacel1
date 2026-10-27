@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -33,7 +33,11 @@ function BankValue({ children }) {
 // The payment details of an invoice: which account it is paid into, the reference the customer
 // quotes, and what the payment covers. Nothing is invented: without a saved account the section
 // says so and points at settings rather than filling in bank details of its own.
-export default function InvoicePaymentFields({ value, onChange }) {
+// Offered in the account list only while the draft still names an account that has been deleted. It
+// is never selectable; it exists so the list tells the truth instead of showing an empty choice.
+const MISSING = "unavailable";
+
+export default function InvoicePaymentFields({ value, onChange, preselectDefault = false, frozen = null }) {
   const { t } = useI18n();
   const { activeCompany } = useSession();
   const fetchAccounts = useServerFn(listBankAccounts);
@@ -45,13 +49,22 @@ export default function InvoicePaymentFields({ value, onChange }) {
   });
   const accounts = accountsQuery.data || [];
   const selected = accounts.find((account) => account.id === value.bank_account_id) || null;
+  // The account this draft names is not among the company's accounts any more: it was deleted after
+  // being chosen. What the invoice already shows stays as it is until someone decides otherwise.
+  const missing = Boolean(value.bank_account_id) && !selected && !accountsQuery.isLoading;
+  const details = selected || (missing ? frozen : null);
 
-  // A new invoice starts from the company's default account.
+  // A brand new invoice starts from the account the company marked as its default, once. An existing
+  // draft never has its account changed here: the app does not substitute the default for one that
+  // has gone, and does not put a selection back after someone cleared it.
+  const defaultApplied = useRef(false);
   useEffect(() => {
+    if (!preselectDefault || defaultApplied.current) return;
     if (value.bank_account_id || !accounts.length) return;
+    defaultApplied.current = true;
     const preferred = pickDefaultAccount(accounts);
     if (preferred) onChange("bank_account_id", preferred.id);
-  }, [accounts, value.bank_account_id]);
+  }, [preselectDefault, accounts, value.bank_account_id, onChange]);
 
   const country = activeCompany?.country || "";
   const reference = value.payment_reference || "";
@@ -71,18 +84,30 @@ export default function InvoicePaymentFields({ value, onChange }) {
         <div className="flex h-9 items-center">
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
         </div>
-      ) : accounts.length ? (
+      ) : accounts.length || missing ? (
         <div className="grid gap-4 sm:grid-cols-2">
+          {missing ? (
+            <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 sm:col-span-2">
+              <p className="text-sm font-medium">{t("payments.account_missing_title")}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("payments.account_missing_desc")}</p>
+            </div>
+          ) : null}
           <div className="sm:col-span-2">
             <Label>{t("payments.bank_account")}</Label>
             <Select
-              value={selected?.id || "none"}
+              value={selected ? selected.id : missing ? MISSING : "none"}
               onValueChange={(next) => onChange("bank_account_id", next === "none" ? "" : next)}
             >
               <SelectTrigger className="mt-1.5">
                 <SelectValue placeholder={t("payments.bank_account")} />
               </SelectTrigger>
               <SelectContent className="max-h-72">
+                {missing ? (
+                  <SelectItem value={MISSING} disabled>
+                    {t("payments.bank_account_missing")}
+                  </SelectItem>
+                ) : null}
+                <SelectItem value="none">{t("payments.bank_account_none")}</SelectItem>
                 {accounts.map((account) => (
                   <SelectItem key={account.id} value={account.id}>
                     {[account.account_holder, formatIban(account.iban), account.is_default ? t("bank.default_badge") : null]
@@ -96,26 +121,26 @@ export default function InvoicePaymentFields({ value, onChange }) {
 
           <div>
             <Label>{t("bank.account_holder")}</Label>
-            <BankValue>{selected?.account_holder || "—"}</BankValue>
+            <BankValue>{details?.account_holder || "—"}</BankValue>
           </div>
           <div>
             <Label>{t("bank.iban")}</Label>
             <BankValue>
-              <span className="font-mono text-xs">{selected?.iban ? formatIban(selected.iban) : "—"}</span>
+              <span className="font-mono text-xs">{details?.iban ? formatIban(details.iban) : "—"}</span>
             </BankValue>
           </div>
 
-          {selected?.bank_name ? (
+          {details?.bank_name ? (
             <div>
               <Label>{t("bank.bank_name")}</Label>
-              <BankValue>{selected.bank_name}</BankValue>
+              <BankValue>{details.bank_name}</BankValue>
             </div>
           ) : null}
-          {selected?.bic ? (
+          {details?.bic ? (
             <div>
               <Label>{t("bank.bic")}</Label>
               <BankValue>
-                <span className="font-mono text-xs">{selected.bic}</span>
+                <span className="font-mono text-xs">{details.bic}</span>
               </BankValue>
             </div>
           ) : null}

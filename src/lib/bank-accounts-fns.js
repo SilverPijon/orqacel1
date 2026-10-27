@@ -151,12 +151,13 @@ export const createBankAccount = createServerFn({ method: "POST" })
     const service = context.getBase44().asServiceRole;
     const companyId = session.activeCompany.id;
     const value = readAccount(data);
-    const { accounts, defaultId } = await readDefaultId(service, companyId, session.activeCompany);
+    const { defaultId } = await readDefaultId(service, companyId, session.activeCompany);
 
-    // The first account a company saves becomes its default, so a new invoice always has one to
-    // start from; after that the choice belongs to the user. Any number of accounts may be added:
-    // this pointer never limits how many the company keeps.
-    const makeDefault = data.is_default === true || accounts.length === 0;
+    // Nothing is made the default automatically — not the first account a company saves and not the
+    // ones after it. A new invoice starts with no account chosen until someone marks one as default,
+    // so the account customers pay into is always a decision a person made. Any number of accounts
+    // may be added: this pointer never limits how many the company keeps.
+    const makeDefault = data.is_default === true;
 
     const created = await service.entities.CompanyBankAccount.create({
       company_id: companyId,
@@ -223,15 +224,11 @@ export const deleteBankAccount = createServerFn({ method: "POST" })
     await service.entities.CompanyBankAccount.delete(account.id);
 
     // Invoices that already exist keep the payment details frozen into them; only invoices made from
-    // now on are affected. When the default is the one that went, the earliest remaining account
-    // takes over, and when nothing is left the pointer is cleared rather than left dangling.
+    // now on are affected. Deleting the default leaves the company with no default at all: another
+    // account is never promoted in its place, because that would name a payee nobody chose.
     let nextDefault = defaultId;
     if (wasDefault) {
-      const remaining = await listAccounts(service, companyId);
-      const [next] = [...remaining].sort((a, b) =>
-        String(a.created_date).localeCompare(String(b.created_date)),
-      );
-      nextDefault = next ? next.id : "";
+      nextDefault = "";
       // Replaces the pointer only while it still names the account that went, so a choice made in
       // the meantime is not overwritten by this cleanup.
       const written = await service.entities.Company.updateMany(pointerFilter(companyId, account.id), {
@@ -245,4 +242,23 @@ export const deleteBankAccount = createServerFn({ method: "POST" })
     await mirrorFlags(service, companyId, nextDefault);
 
     return { id: account.id, default_bank_account_id: nextDefault };
+  });
+
+// Clears the company's default, leaving it with none: new invoices then start with no account chosen.
+// The write applies only while the pointer still holds the value that was just read, so a default
+// chosen at the same moment is reported rather than overwritten.
+export const clearDefaultBankAccount = createServerFn({ method: "POST" })
+  .middleware([requireUser])
+  .handler(async ({ context }) => {
+    const session = await requireCompanyContext(context, "admin");
+    const service = context.getBase44().asServiceRole;
+    const companyId = session.activeCompany.id;
+
+    const claimed = await claimDefault(service, companyId, "");
+    if (!claimed) {
+      throw httpError(409, "The default account changed at the same moment, please try again", "DEFAULT_CONFLICT");
+    }
+    await mirrorFlags(service, companyId, "");
+
+    return { default_bank_account_id: "" };
   });

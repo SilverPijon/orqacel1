@@ -218,7 +218,12 @@ export default function InvoiceForm({ invoice }) {
         </div>
       </section>
 
-      <InvoicePaymentFields value={form.payment} onChange={updatePayment} />
+      <InvoicePaymentFields
+        value={form.payment}
+        onChange={updatePayment}
+        preselectDefault={!invoice}
+        frozen={invoice?.payment_snapshot || null}
+      />
 
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
         <Label htmlFor="invoice-notes">{t("common.notes")}</Label>
