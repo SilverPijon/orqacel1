@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, FileText, Loader2, Pencil } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, Pause, Pencil, Play } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/PageHeader";
@@ -10,9 +10,11 @@ import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import JobFormDialog from "@/components/jobs/JobFormDialog";
+import PauseJobDialog from "@/components/jobs/PauseJobDialog";
 import { useSession } from "@/lib/SessionContext";
 import { deleteJob, getJob, updateJobStatus } from "@/lib/jobs-fns";
 import { formatDate, formatMoney } from "@/lib/format";
+import { canTransition, pauseReasonKey, resumeTarget } from "@/lib/jobStatus";
 import { JOB_PRIORITY, JOB_STATUS } from "@/lib/statusMeta";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
@@ -31,6 +33,7 @@ function JobDetailPage() {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [pauseOpen, setPauseOpen] = useState(false);
 
   const query = useQuery({
     queryKey: ["job", jobId],
@@ -53,14 +56,18 @@ function JobDetailPage() {
   const statusMeta = JOB_STATUS[job.status] || JOB_STATUS.scheduled;
   const priorityMeta = JOB_PRIORITY[job.priority] || JOB_PRIORITY.medium;
 
-  const setStatus = async (status) => {
+  // The existing status setter. It gains nothing new except that a pause may carry its reason
+  // and note; every other move behaves exactly as before.
+  const setStatus = async (status, extra = {}) => {
     setBusy(true);
     try {
-      await statusFn({ data: { id: job.id, status } });
+      await statusFn({ data: { id: job.id, status, ...extra } });
+      setPauseOpen(false);
       await query.refetch();
       toast.success(t("common.saved"));
     } catch (error) {
-      toast.error(error?.message || t("common.error"));
+      toast.error(error?.status === 409 ? t("jobs.status_conflict") : error?.message || t("common.error"));
+      await query.refetch();
     } finally {
       setBusy(false);
     }
@@ -122,6 +129,32 @@ function JobDetailPage() {
         ) : null}
       </section>
 
+      {job.status === "paused" ? (
+        <section className="mt-4 rounded-2xl border border-border bg-info-muted p-5 sm:p-6">
+          <h2 className="type-section-title">{t("jobs.status_paused")}</h2>
+          <dl className="mt-3 grid gap-4 sm:grid-cols-3">
+            <div>
+              <dt className="type-group-label">{t("jobs.pause_reason")}</dt>
+              <dd className="mt-1 type-body text-foreground">{t(pauseReasonKey(job.pause_reason))}</dd>
+            </div>
+            {job.paused_at ? (
+              <div>
+                <dt className="type-group-label">{t("jobs.paused_on")}</dt>
+                <dd className="mt-1 type-body text-foreground">
+                  {formatDate(String(job.paused_at).slice(0, 10), lang)}
+                </dd>
+              </div>
+            ) : null}
+            {job.pause_note ? (
+              <div className="sm:col-span-3">
+                <dt className="type-group-label">{t("jobs.pause_note")}</dt>
+                <dd className="mt-1 whitespace-pre-line type-body text-foreground">{job.pause_note}</dd>
+              </div>
+            ) : null}
+          </dl>
+        </section>
+      ) : null}
+
       <div className="mt-6 flex flex-wrap gap-2">
         {job.status !== "in_progress" && job.status !== "completed" ? (
           <Button variant="outline" disabled={busy} onClick={() => setStatus("in_progress")}>
@@ -136,6 +169,21 @@ function JobDetailPage() {
         {job.status !== "cancelled" ? (
           <Button variant="outline" disabled={busy} onClick={() => setStatus("cancelled")}>
             {t("jobs.status_cancelled")}
+          </Button>
+        ) : null}
+        {job.status === "paused" ? (
+          <Button
+            className="gap-2"
+            disabled={busy}
+            onClick={() => setStatus(resumeTarget(job))}
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            {t("jobs.resume")}
+          </Button>
+        ) : canTransition(job.status, "paused") ? (
+          <Button variant="outline" className="gap-2" disabled={busy} onClick={() => setPauseOpen(true)}>
+            <Pause className="h-4 w-4" />
+            {t("jobs.pause")}
           </Button>
         ) : null}
         {job.quotation_id ? (
@@ -161,6 +209,13 @@ function JobDetailPage() {
       </div>
 
       <JobFormDialog open={editing} onOpenChange={setEditing} job={job} onSaved={() => query.refetch()} />
+
+      <PauseJobDialog
+        open={pauseOpen}
+        onOpenChange={setPauseOpen}
+        pending={busy}
+        onConfirm={({ reason, note }) => setStatus("paused", { reason, note })}
+      />
 
       <ConfirmDeleteDialog
         open={confirming}

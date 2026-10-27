@@ -40,7 +40,7 @@ function DashboardPage() {
   }
 
   const data = query.data;
-  const counts = data?.counts || { clients: 0, openQuotations: 0, issuedInvoices: 0, activeJobs: 0, acceptedValue: 0 };
+  const counts = data?.counts || { clients: 0, openQuotations: 0, issuedInvoices: 0, activeJobs: 0, pausedJobs: 0, acceptedValue: 0 };
 
   return (
     <div>
@@ -73,7 +73,13 @@ function DashboardPage() {
           icon={Receipt}
           to="/invoices"
         />
-        <StatCard label={t("dashboard.active_jobs")} value={counts.activeJobs} icon={Briefcase} to="/jobs" />
+        <StatCard
+          label={t("dashboard.active_jobs")}
+          value={counts.activeJobs}
+          hint={counts.pausedJobs ? t("dashboard.paused_jobs", { count: counts.pausedJobs }) : undefined}
+          icon={Briefcase}
+          to="/jobs"
+        />
         <StatCard
           label={t("dashboard.accepted_value")}
           value={formatMoney(counts.acceptedValue, currency, lang)}

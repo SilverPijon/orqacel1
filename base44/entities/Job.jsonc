@@ -26,10 +26,29 @@
       "enum": [
         "scheduled",
         "in_progress",
+        "paused",
         "completed",
         "cancelled"
       ],
-      "default": "scheduled"
+      "default": "scheduled",
+      "description": "Job lifecycle state. 'paused' was added later and means work is temporarily suspended: the job keeps its dates, client, quotation link and price. Existing records only ever hold the original four values, which keep their meaning."
+    },
+    "pause_reason": {
+      "type": "string",
+      "description": "Why a paused job is suspended. One of materials, customer, weather, other, or empty when no reason was given. Optional by design."
+    },
+    "pause_note": {
+      "type": "string",
+      "description": "Free-text explanation attached to a pause, at most 500 characters. Cleared when the job resumes."
+    },
+    "paused_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the job was paused. Cleared when it resumes."
+    },
+    "paused_from_status": {
+      "type": "string",
+      "description": "The active status the job was paused from (scheduled or in_progress), so resuming returns it where it came from. Cleared when it resumes."
     },
     "priority": {
       "type": "string",

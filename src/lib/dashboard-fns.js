@@ -9,10 +9,13 @@ export const getDashboard = createServerFn({ method: "GET" })
     const companyId = session.activeCompany.id;
     const { Client, Quotation, Job, Invoice } = context.getBase44().entities;
 
-    const [clients, openQuotations, activeJobs, issuedInvoices, accepted, recentQuotations, recentJobs] = await Promise.all([
+    const [clients, openQuotations, activeJobs, pausedJobs, issuedInvoices, accepted, recentQuotations, recentJobs] = await Promise.all([
       Client.count({ company_id: companyId }),
       Quotation.count({ company_id: companyId, status: { $in: ["draft", "sent"] } }),
+      // Active means work that is actually moving: paused jobs are excluded here and counted
+      // on their own, so a suspended job is never reported as active.
       Job.count({ company_id: companyId, status: { $in: ["scheduled", "in_progress"] } }),
+      Job.count({ company_id: companyId, status: "paused" }),
       // Issued invoices are the ones still outstanding: an issued invoice is frozen and payable,
       // and the invoice carries no separate "paid" state to subtract.
       Invoice.count({ company_id: companyId, status: "issued" }),
@@ -26,6 +29,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         clients,
         openQuotations,
         activeJobs,
+        pausedJobs,
         issuedInvoices,
         acceptedValue: Number(accepted?.rows?.[0]?.sum_total || 0),
       },

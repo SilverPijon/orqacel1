@@ -22,7 +22,7 @@ export const TIMEZONES = [
 
 export const QUOTATION_STATUSES = ["draft", "sent", "accepted", "declined", "expired"];
 
-export const JOB_STATUSES = ["scheduled", "in_progress", "completed", "cancelled"];
+export const JOB_STATUSES = ["scheduled", "in_progress", "paused", "completed", "cancelled"];
 
 export const JOB_PRIORITIES = ["low", "medium", "high", "urgent"];
 

@@ -15,6 +15,7 @@ export const INVOICE_STATUS = {
 export const JOB_STATUS = {
   scheduled: { key: "jobs.status_scheduled", tone: "primary" },
   in_progress: { key: "jobs.status_in_progress", tone: "warning" },
+  paused: { key: "jobs.status_paused", tone: "info" },
   completed: { key: "jobs.status_completed", tone: "success" },
   cancelled: { key: "jobs.status_cancelled", tone: "muted" },
 };

@@ -86,6 +86,7 @@ function JobsPage() {
             <SelectItem value="all">{t("common.all")}</SelectItem>
             <SelectItem value="scheduled">{t("jobs.status_scheduled")}</SelectItem>
             <SelectItem value="in_progress">{t("jobs.status_in_progress")}</SelectItem>
+            <SelectItem value="paused">{t("jobs.status_paused")}</SelectItem>
             <SelectItem value="completed">{t("jobs.status_completed")}</SelectItem>
             <SelectItem value="cancelled">{t("jobs.status_cancelled")}</SelectItem>
           </SelectContent>
