@@ -81,10 +81,20 @@ export async function generateQuotationPdf({ quotation, client, company, logo, t
   const money = (amount) => formatMoney(amount, currency, lang);
   const quantity = (value) => String(Number(value || 0));
 
+  // A value that only repeats one already printed is left out: a customer whose contact person
+  // carries the same name as the customer, or a company whose legal name equals its trading name,
+  // is not shown twice. Two genuinely different names are both kept.
+  const sameText = (first, second) => {
+    const value = clean(first).toLowerCase();
+    return Boolean(value) && value === clean(second).toLowerCase();
+  };
+
   let y = MARGIN.top;
   let repeatTableHeader = null;
 
-  const pageBreak = () => {
+  // `repeatTableHeader: false` keeps the column titles off a page that opens with something other
+  // than table rows (the totals block, the notes), where they would sit above unrelated content.
+  const pageBreak = ({ repeatTableHeader: repeatRows = true } = {}) => {
     doc.addPage();
     y = MARGIN.top;
     // A slim continuation header keeps every printed page identifiable.
@@ -95,10 +105,10 @@ export async function generateQuotationPdf({ quotation, client, company, logo, t
     y += 6;
     rule(MARGIN.left, PAGE.width - MARGIN.right);
     y += 6;
-    if (repeatTableHeader) repeatTableHeader();
+    if (repeatRows && repeatTableHeader) repeatTableHeader();
   };
-  const ensure = (height) => {
-    if (y + height > FOOTER_LINE) pageBreak();
+  const ensure = (height, options) => {
+    if (y + height > FOOTER_LINE) pageBreak(options);
   };
 
   // --- Masthead: the company's own identity, and the document's identity ---------------------
@@ -127,7 +137,7 @@ export async function generateQuotationPdf({ quotation, client, company, logo, t
   const nameLines = splitLines(doc, companyName, identityWidth).slice(0, 2);
   style("bold", 15);
   nameLines.forEach((line, index) => write(line, identityX, y + 6 + index * 6));
-  if (clean(company?.legal_name)) {
+  if (clean(company?.legal_name) && !sameText(company.legal_name, companyName)) {
     style("normal", 9, MUTED);
     write(company.legal_name, identityX, y + 6 + nameLines.length * 6);
   }
@@ -175,8 +185,10 @@ export async function generateQuotationPdf({ quotation, client, company, logo, t
     right(value, COL.amountRight, metaY);
     metaY += 5;
   };
+  // Both dates read exactly as the quotation page shows them, so a date that was never set is
+  // presented the same way in the app and on the document instead of vanishing from one of them.
   metaRow(t("quotations.issue_date"), formatDate(quotation.issue_date, lang));
-  metaRow(t("quotations.valid_until"), quotation.valid_until ? formatDate(quotation.valid_until, lang) : "");
+  metaRow(t("quotations.valid_until"), formatDate(quotation.valid_until, lang));
   metaRow(t("common.status"), t(status.key));
   metaRow(t("common.currency"), currency);
 
@@ -189,7 +201,7 @@ export async function generateQuotationPdf({ quotation, client, company, logo, t
   style("bold", 11);
   write(quotation.client_name, MARGIN.left, y + 9);
   const clientLines = [
-    client?.contact_name,
+    sameText(client?.contact_name, quotation.client_name) ? "" : client?.contact_name,
     client?.address,
     [client?.postal_code, client?.city].filter(Boolean).join(" "),
     client?.country ? countryLabel(client.country, lang) : "",
@@ -280,7 +292,7 @@ export async function generateQuotationPdf({ quotation, client, company, logo, t
 
   // --- Totals: stored values only, never recalculated ----------------------------------------
   y += 4;
-  ensure(showVat ? 26 : 21);
+  ensure(showVat ? 26 : 21, { repeatTableHeader: false });
   doc.setDrawColor(LINE[0], LINE[1], LINE[2]);
   doc.setLineWidth(0.2);
   doc.line(COL.qtyRight - 26, y, COL.amountRight, y);
@@ -304,7 +316,7 @@ export async function generateQuotationPdf({ quotation, client, company, logo, t
   if (clean(quotation.notes)) {
     const noteLines = splitLines(doc, quotation.notes, CONTENT_WIDTH);
     y += 4;
-    ensure(16);
+    ensure(16, { repeatTableHeader: false });
     rule(MARGIN.left, PAGE.width - MARGIN.right);
     y += 5;
     style("bold", 8.5, MUTED);

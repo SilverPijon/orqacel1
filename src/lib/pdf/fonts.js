@@ -6,14 +6,21 @@
 // would otherwise be shipped to every visitor for a feature most sessions never use. Noto comes
 // from the official googlefonts/noto-fonts repository, with a second host tried if the first is
 // unreachable. Nothing is cached beyond the browser session.
+//
+// Both URLs are pinned to one immutable commit (7 June 2022) instead of the repository's branch:
+// the branch moves, so the bytes a document embeds could otherwise change underneath it, and a
+// reorganisation of the repository could break generation outright. The two hosts are independent
+// of each other and serve the same pinned revision.
+const NOTO_COMMIT = "c971829a87e7920f960e7277c3dafd9bedd3c601";
+
 const SOURCES = {
   normal: [
-    "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@main/hinted/ttf/NotoSans/NotoSans-Regular.ttf",
-    "https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Regular.ttf",
+    `https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@${NOTO_COMMIT}/hinted/ttf/NotoSans/NotoSans-Regular.ttf`,
+    `https://raw.githubusercontent.com/googlefonts/noto-fonts/${NOTO_COMMIT}/hinted/ttf/NotoSans/NotoSans-Regular.ttf`,
   ],
   bold: [
-    "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@main/hinted/ttf/NotoSans/NotoSans-Bold.ttf",
-    "https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Bold.ttf",
+    `https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@${NOTO_COMMIT}/hinted/ttf/NotoSans/NotoSans-Bold.ttf`,
+    `https://raw.githubusercontent.com/googlefonts/noto-fonts/${NOTO_COMMIT}/hinted/ttf/NotoSans/NotoSans-Bold.ttf`,
   ],
 };
 
