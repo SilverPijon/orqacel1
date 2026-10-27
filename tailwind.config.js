@@ -43,6 +43,18 @@ export default {
   				DEFAULT: 'hsl(var(--destructive))',
   				foreground: 'hsl(var(--destructive-foreground))'
   			},
+  			success: {
+  				DEFAULT: 'hsl(var(--success))',
+  				muted: 'hsl(var(--success-muted))'
+  			},
+  			warning: {
+  				DEFAULT: 'hsl(var(--warning))',
+  				muted: 'hsl(var(--warning-muted))'
+  			},
+  			info: {
+  				DEFAULT: 'hsl(var(--info))',
+  				muted: 'hsl(var(--info-muted))'
+  			},
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',

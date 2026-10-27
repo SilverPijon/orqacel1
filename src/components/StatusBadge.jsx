@@ -2,9 +2,10 @@ import React from "react";
 
 const TONES = {
   muted: "bg-muted text-muted-foreground",
-  primary: "bg-primary/10 text-primary",
-  success: "bg-emerald-500/10 text-emerald-600",
-  warning: "bg-amber-500/10 text-amber-600",
+  primary: "bg-info-muted text-info",
+  info: "bg-info-muted text-info",
+  success: "bg-success-muted text-success",
+  warning: "bg-warning-muted text-warning",
   danger: "bg-destructive/10 text-destructive",
 };
 
