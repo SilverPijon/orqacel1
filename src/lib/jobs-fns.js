@@ -4,7 +4,12 @@ import { requireUser } from "@/lib/auth-middleware";
 import { asArray, httpError, requireCompanyContext } from "@/lib/tenant.server";
 import { escapeRegex } from "@/lib/search";
 import { JOB_STATUS_VALUES, PAUSE_REASONS, canTransition, statusPatch } from "@/lib/jobStatus";
-import { currentRevision, nextRevision, writeJobConditionally } from "@/lib/jobWrites.server";
+import {
+  currentRevision,
+  deleteJobConditionally,
+  nextRevision,
+  writeJobConditionally,
+} from "@/lib/jobWrites.server";
 
 const JobInput = z.object({
   title: z.string().min(1).max(160),
@@ -268,7 +273,13 @@ export const updateJobStatus = createServerFn({ method: "POST" })
 
 export const deleteJob = createServerFn({ method: "POST" })
   .middleware([requireUser])
-  .validator(z.object({ id: z.string().min(1).max(64) }))
+  .validator(
+    z.object({
+      id: z.string().min(1).max(64),
+      // The revision the screen showed. A job that moved since is never deleted on a stale view.
+      expected_revision: z.number().int().min(0),
+    }),
+  )
   .handler(async ({ data, context }) => {
     const session = await requireCompanyContext(context, "admin");
     const service = context.getBase44().asServiceRole;
@@ -276,6 +287,14 @@ export const deleteJob = createServerFn({ method: "POST" })
     if (!existing || existing.company_id !== session.activeCompany.id) {
       throw httpError(404, "Job not found", "NOT_FOUND");
     }
-    await service.entities.Job.delete(data.id);
+    if (currentRevision(existing) !== data.expected_revision) {
+      throw httpError(409, "This job changed in the meantime", "STALE_JOB");
+    }
+    const removed = await deleteJobConditionally(service, existing, {
+      companyId: session.activeCompany.id,
+    });
+    if (removed === 0) {
+      throw httpError(409, "This job changed in the meantime", "STALE_JOB");
+    }
     return { id: data.id };
   });

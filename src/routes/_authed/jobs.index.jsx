@@ -43,12 +43,25 @@ function JobsPage() {
     if (!pendingDelete) return;
     setDeleting(true);
     try {
-      await deleteFn({ data: { id: pendingDelete.id } });
+      await deleteFn({
+        data: {
+          id: pendingDelete.id,
+          // The revision this row showed: a job that moved since is not deleted on a stale view.
+          expected_revision: Number.isInteger(pendingDelete.revision) ? pendingDelete.revision : 0,
+        },
+      });
       setPendingDelete(null);
       await list.reload();
       toast.success(t("common.saved"));
     } catch (error) {
-      toast.error(error?.message || t("common.error"));
+      if (error?.status === 409) {
+        // Nothing was deleted; reload so the row shows the job as it stands now.
+        setPendingDelete(null);
+        await list.reload();
+        toast.error(t("jobs.status_conflict"));
+      } else {
+        toast.error(error?.message || t("common.error"));
+      }
     } finally {
       setDeleting(false);
     }

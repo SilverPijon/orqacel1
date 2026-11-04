@@ -46,3 +46,16 @@ export async function writeJobConditionally(service, job, { companyId, expectedS
   });
   return Number(result?.updated || 0);
 }
+
+// Deletes exactly one job, only while it is still the version `job` describes. Returns 1 when this
+// caller's delete is the one that removed it, 0 when the job had already moved on — and then
+// nothing is deleted. The platform applies the condition and the removal in the same operation, so
+// a delete started from a stale screen can never discard a change made in the meantime.
+export async function deleteJobConditionally(service, job, { companyId } = {}) {
+  const result = await service.entities.Job.deleteMany({
+    id: job.id,
+    company_id: companyId,
+    ...revisionCondition(job),
+  });
+  return Number(result?.deleted || 0);
+}

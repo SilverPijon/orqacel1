@@ -95,11 +95,20 @@ function JobDetailPage() {
   const confirmDelete = async () => {
     setBusy(true);
     try {
-      await deleteFn({ data: { id: job.id } });
+      await deleteFn({
+        // The revision this screen loaded: if the job moved since, nothing is deleted.
+        data: { id: job.id, expected_revision: Number.isInteger(job.revision) ? job.revision : 0 },
+      });
       toast.success(t("common.saved"));
       window.history.back();
     } catch (error) {
-      toast.error(error?.message || t("common.error"));
+      if (error?.status === 409) {
+        // Still there and changed — nothing was deleted. Show the conflict notice instead.
+        setConfirming(false);
+        setStale(true);
+      } else {
+        toast.error(error?.message || t("common.error"));
+      }
     } finally {
       setBusy(false);
     }
