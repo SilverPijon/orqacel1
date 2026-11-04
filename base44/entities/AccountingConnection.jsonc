@@ -81,6 +81,85 @@
       "type": "string",
       "format": "date-time",
       "description": "When the connection was disabled. Kept for history; a disabled connection is never deleted while exports reference it."
+    },
+    "configuration_revision": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Server-managed destination configuration revision. Missing/null does not establish a verified binding."
+    },
+    "destination_binding": {
+      "type": "object",
+      "description": "Immutable, non-secret accounting destination identity. Set only by trusted server code after independent destination verification. Credential references are not ledger identity.",
+      "properties": {
+        "companyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "merit"
+          ],
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "connectionId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "connectionRevision": {
+          "type": "number",
+          "minimum": 0
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "test",
+            "live"
+          ],
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "region": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "ledgerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "bindingId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "companyId",
+        "provider",
+        "connectionId",
+        "connectionRevision",
+        "environment",
+        "region",
+        "ledgerId",
+        "bindingId"
+      ],
+      "additionalProperties": false
+    },
+    "destination_verified_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Independent destination-verification evidence timestamp, not merely credential presence. No verification is performed by preparation stage B."
     }
   },
   "required": [

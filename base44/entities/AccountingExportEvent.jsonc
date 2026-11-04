@@ -47,7 +47,12 @@
         "export_recovery_required",
         "reconcile_found",
         "reconcile_absent",
-        "reconcile_conflict"
+        "reconcile_conflict",
+        "export_claimed",
+        "export_send_authorized",
+        "export_preparation_abandoned",
+        "export_preparation_resumed",
+        "invoice_cancelled_before_send"
       ],
       "description": "What happened. This entity has no free-form payload field on purpose: events are built from an explicit whitelist, so no credential, request body or provider response can ever be stored here."
     },
@@ -78,6 +83,86 @@
     "occurred_at": {
       "type": "number",
       "description": "Epoch milliseconds when the event happened. Append-only: an event is never edited or deleted, it is only written."
+    },
+    "event_key": {
+      "type": "string",
+      "description": "Deterministic logical transition identity for deduplication; no database uniqueness is assumed."
+    },
+    "claim_ref": {
+      "type": "string"
+    },
+    "connection_id": {
+      "type": "string"
+    },
+    "binding": {
+      "type": "object",
+      "description": "Immutable, non-secret accounting destination identity. Set only by trusted server code after independent destination verification. Credential references are not ledger identity.",
+      "properties": {
+        "companyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "merit"
+          ],
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "connectionId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "connectionRevision": {
+          "type": "number",
+          "minimum": 0
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "test",
+            "live"
+          ],
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "region": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "ledgerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "bindingId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "companyId",
+        "provider",
+        "connectionId",
+        "connectionRevision",
+        "environment",
+        "region",
+        "ledgerId",
+        "bindingId"
+      ],
+      "additionalProperties": false
+    },
+    "accounting_revision": {
+      "type": "number",
+      "minimum": 0
+    },
+    "attempt_token": {
+      "type": "string"
     }
   },
   "required": [
