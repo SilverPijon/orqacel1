@@ -218,6 +218,7 @@ export default {
   "jobs.pause_note_placeholder": "Explication facultative",
   "jobs.paused_on": "En pause depuis",
   "jobs.status_conflict": "Le statut de l'intervention a changé entre-temps, ou ce changement n'est pas autorisé. Le statut le plus récent est affiché.",
+  "jobs.refresh_latest": "Actualiser",
   "jobs.delete_title": "Supprimer l'intervention ?",
   "jobs.delete_desc": "L'intervention sera définitivement supprimée.",
 

@@ -218,6 +218,7 @@ export default {
   "jobs.pause_note_placeholder": "Valinnainen selitys",
   "jobs.paused_on": "Keskeytetty",
   "jobs.status_conflict": "Työn tila muuttui tai tämä muutos ei ole sallittu. Näytetään uusin tila.",
+  "jobs.refresh_latest": "Päivitä",
   "jobs.delete_title": "Poistetaanko työ?",
   "jobs.delete_desc": "Työ poistetaan pysyvästi.",
 

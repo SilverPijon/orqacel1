@@ -218,6 +218,7 @@ export default {
   "jobs.pause_note_placeholder": "Optionale Erläuterung",
   "jobs.paused_on": "Pausiert am",
   "jobs.status_conflict": "Der Status des Auftrags hat sich geändert oder diese Änderung ist nicht erlaubt. Der aktuelle Status wird angezeigt.",
+  "jobs.refresh_latest": "Aktualisieren",
   "jobs.delete_title": "Auftrag löschen?",
   "jobs.delete_desc": "Der Auftrag wird dauerhaft entfernt.",
 

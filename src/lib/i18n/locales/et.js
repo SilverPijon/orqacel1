@@ -218,6 +218,7 @@ export default {
   "jobs.pause_note_placeholder": "Valikuline selgitus",
   "jobs.paused_on": "Peatatud",
   "jobs.status_conflict": "Töö olek muutus vahepeal või see muudatus pole lubatud. Kuvatakse viimane olek.",
+  "jobs.refresh_latest": "Värskenda",
   "jobs.delete_title": "Kustuta töö?",
   "jobs.delete_desc": "Töö eemaldatakse jäädavalt.",
 

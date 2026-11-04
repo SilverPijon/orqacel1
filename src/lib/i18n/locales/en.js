@@ -218,6 +218,7 @@ export default {
   "jobs.pause_note_placeholder": "Optional explanation",
   "jobs.paused_on": "Paused on",
   "jobs.status_conflict": "This job changed in the meantime, or that status change isn't allowed. The latest status is shown.",
+  "jobs.refresh_latest": "Refresh",
   "jobs.delete_title": "Delete job?",
   "jobs.delete_desc": "This permanently removes the job.",
 

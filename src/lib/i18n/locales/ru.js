@@ -218,6 +218,7 @@ export default {
   "jobs.pause_note_placeholder": "Необязательное пояснение",
   "jobs.paused_on": "Приостановлено",
   "jobs.status_conflict": "Статус работы изменился, или это изменение недопустимо. Показан актуальный статус.",
+  "jobs.refresh_latest": "Обновить",
   "jobs.delete_title": "Удалить работу?",
   "jobs.delete_desc": "Работа будет удалена навсегда.",
 

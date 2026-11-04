@@ -218,6 +218,7 @@ export default {
   "jobs.pause_note_placeholder": "Neprivalomas paaiškinimas",
   "jobs.paused_on": "Pristabdyta",
   "jobs.status_conflict": "Darbo būsena pasikeitė arba šis pakeitimas neleidžiamas. Rodoma naujausia būsena.",
+  "jobs.refresh_latest": "Atnaujinti",
   "jobs.delete_title": "Ištrinti darbą?",
   "jobs.delete_desc": "Darbas bus visam laikui pašalintas.",
 

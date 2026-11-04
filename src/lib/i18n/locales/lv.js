@@ -218,6 +218,7 @@ export default {
   "jobs.pause_note_placeholder": "Neobligāts skaidrojums",
   "jobs.paused_on": "Apturēts",
   "jobs.status_conflict": "Darba statuss šajā laikā mainījās vai šīs izmaiņas nav atļautas. Tiek rādīts jaunākais statuss.",
+  "jobs.refresh_latest": "Atjaunot",
   "jobs.delete_title": "Dzēst darbu?",
   "jobs.delete_desc": "Darbs tiks neatgriezeniski dzēsts.",
 

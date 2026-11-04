@@ -218,6 +218,7 @@ export default {
   "jobs.pause_note_placeholder": "Opcjonalne wyjaśnienie",
   "jobs.paused_on": "Wstrzymane",
   "jobs.status_conflict": "Status zlecenia zmienił się w międzyczasie lub ta zmiana jest niedozwolona. Wyświetlany jest najnowszy status.",
+  "jobs.refresh_latest": "Odśwież",
   "jobs.delete_title": "Usunąć zlecenie?",
   "jobs.delete_desc": "Zlecenie zostanie trwale usunięte.",
 

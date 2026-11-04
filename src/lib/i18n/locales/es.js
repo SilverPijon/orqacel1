@@ -218,6 +218,7 @@ export default {
   "jobs.pause_note_placeholder": "Explicación opcional",
   "jobs.paused_on": "En pausa desde",
   "jobs.status_conflict": "El estado del trabajo cambió mientras tanto o ese cambio no está permitido. Se muestra el estado más reciente.",
+  "jobs.refresh_latest": "Actualizar",
   "jobs.delete_title": "¿Eliminar trabajo?",
   "jobs.delete_desc": "El trabajo se eliminará de forma permanente.",
 

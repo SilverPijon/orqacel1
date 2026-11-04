@@ -218,6 +218,7 @@ export default {
   "jobs.pause_note_placeholder": "Valfri förklaring",
   "jobs.paused_on": "Pausad",
   "jobs.status_conflict": "Jobbets status ändrades eller så är ändringen inte tillåten. Senaste statusen visas.",
+  "jobs.refresh_latest": "Uppdatera",
   "jobs.delete_title": "Ta bort jobb?",
   "jobs.delete_desc": "Jobbet tas bort permanent.",
 
