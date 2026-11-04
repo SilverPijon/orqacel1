@@ -16,6 +16,10 @@ const JobInput = z.object({
   assigned_to_id: z.string().max(64).optional(),
   address: z.string().max(200).optional(),
   price: z.number().min(0).max(10000000).optional(),
+  // Only meaningful when the form's status is paused; both stay optional, so paused can be saved
+  // without a reason. An empty string means "no reason given".
+  pause_reason: z.union([z.enum(PAUSE_REASONS), z.literal("")]).optional(),
+  pause_note: z.string().max(500).optional(),
 });
 
 async function resolveClient(context, companyId, clientId) {
@@ -122,6 +126,10 @@ export const createJob = createServerFn({ method: "POST" })
       address: (data.address || "").trim(),
       price: Number(data.price || 0),
       currency: session.activeCompany.currency || "EUR",
+      // Created straight away as paused: record the same pause details the form collected.
+      ...(data.status === "paused"
+        ? statusPatch("scheduled", "paused", { reason: data.pause_reason, note: data.pause_note })
+        : {}),
     });
     return { id: created.id };
   });
@@ -165,7 +173,21 @@ export const updateJob = createServerFn({ method: "POST" })
       if (data.status === "paused" && !canTransition(existing.status, "paused")) {
         throw httpError(409, "A finished or cancelled job can't be paused", "PAUSE_NOT_ALLOWED");
       }
-      Object.assign(patch, statusPatch(existing.status, data.status));
+      // Pausing through the form keeps the optional reason and note, and records the status the
+      // job came from so Resume returns it to Scheduled or In progress.
+      Object.assign(
+        patch,
+        statusPatch(existing.status, data.status, {
+          reason: data.pause_reason,
+          note: data.pause_note,
+        }),
+      );
+    } else if (existing.status === "paused" && data.status === "paused") {
+      // Already paused: saving the form edits the pause details and nothing else.
+      patch.pause_reason = PAUSE_REASONS.includes(data.pause_reason) ? data.pause_reason : "";
+      if (data.pause_note !== undefined) {
+        patch.pause_note = String(data.pause_note).trim().slice(0, 500);
+      }
     }
 
     await service.entities.Job.update(data.id, patch);

@@ -13,11 +13,13 @@ import { listClients } from "@/lib/clients-fns";
 import { createJob, updateJob } from "@/lib/jobs-fns";
 import { listMembers } from "@/lib/tenant-fns";
 import { JOB_PRIORITIES, JOB_STATUSES } from "@/lib/constants";
+import { PAUSE_REASONS } from "@/lib/jobStatus";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 const EMPTY = {
   title: "", client_id: "", description: "", status: "scheduled", priority: "medium",
   scheduled_date: "", completed_date: "", assigned_to_id: "", address: "", price: "0",
+  pause_reason: "", pause_note: "",
 };
 
 export default function JobFormDialog({ open, onOpenChange, job, onSaved }) {
@@ -77,6 +79,9 @@ export default function JobFormDialog({ open, onOpenChange, job, onSaved }) {
         assigned_to_id: form.assigned_to_id,
         address: form.address,
         price: Number(form.price) || 0,
+        // Only sent while paused; leaving paused clears them on the server.
+        pause_reason: form.status === "paused" ? form.pause_reason : "",
+        pause_note: form.status === "paused" ? form.pause_note.trim() : "",
       };
       if (job) await updateFn({ data: { id: job.id, ...payload } });
       else await createFn({ data: payload });
@@ -162,6 +167,41 @@ export default function JobFormDialog({ open, onOpenChange, job, onSaved }) {
                 </SelectContent>
               </Select>
             </div>
+            {form.status === "paused" ? (
+              <>
+                <div>
+                  <Label>{t("jobs.pause_reason")}</Label>
+                  <Select
+                    value={form.pause_reason || "none"}
+                    onValueChange={(value) => update("pause_reason", value === "none" ? "" : value)}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">{t("jobs.pause_reason_none")}</SelectItem>
+                      {PAUSE_REASONS.map((reason) => (
+                        <SelectItem key={reason} value={reason}>
+                          {t(`jobs.pause_reason_${reason}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="sm:col-span-2">
+                  <Label htmlFor="job-pause-note">{t("jobs.pause_note")}</Label>
+                  <Textarea
+                    id="job-pause-note"
+                    className="mt-1.5"
+                    rows={2}
+                    maxLength={500}
+                    placeholder={t("jobs.pause_note_placeholder")}
+                    value={form.pause_note}
+                    onChange={(event) => update("pause_note", event.target.value)}
+                  />
+                </div>
+              </>
+            ) : null}
             <div>
               <Label>{t("jobs.priority")}</Label>
               <Select value={form.priority} onValueChange={(value) => update("priority", value)}>
