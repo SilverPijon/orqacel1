@@ -47,7 +47,9 @@
         "exported",
         "failed_retryable",
         "failed_permanent",
-        "needs_reconciliation"
+        "needs_reconciliation",
+        "preparation_failed",
+        "aborted_before_send"
       ],
       "default": "not_exported",
       "description": "Where this export stands. Only exported is terminal. needs_reconciliation is the only exit from an ambiguous outcome and is never retried automatically."
@@ -88,6 +90,122 @@
     "last_actor_id": {
       "type": "string",
       "description": "Who caused the most recent state change: a user id, or empty when a system worker did"
+    },
+    "binding": {
+      "type": "object",
+      "description": "Immutable, non-secret accounting destination identity. Set only by trusted server code after independent destination verification. Credential references are not ledger identity.",
+      "properties": {
+        "companyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "merit"
+          ],
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "connectionId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "connectionRevision": {
+          "type": "number",
+          "minimum": 0
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "test",
+            "live"
+          ],
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "region": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "ledgerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "bindingId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "companyId",
+        "provider",
+        "connectionId",
+        "connectionRevision",
+        "environment",
+        "region",
+        "ledgerId",
+        "bindingId"
+      ],
+      "additionalProperties": false
+    },
+    "source_revision": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Financial revision at candidate creation; null is preserved for legacy data."
+    },
+    "claim_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Canonical Invoice claim reference; row/key existence does not grant send authority."
+    },
+    "accounting_revision": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Invoice accounting revision mirrored by projection; never a lock."
+    },
+    "attempt_token": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "attempt_number": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "send_authorized_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "projection_status": {
+      "type": "string",
+      "enum": [
+        "candidate",
+        "canonical",
+        "orphan",
+        "repair_required"
+      ],
+      "description": "Projection status is informative only. The Invoice permanent reference is authoritative."
     }
   },
   "required": [

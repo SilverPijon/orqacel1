@@ -298,6 +298,170 @@
       "type": "string",
       "format": "date-time",
       "description": "Set once, by a recovery worker, when an interrupted claim was handed to reconciliation. Its own conditional gate admits exactly one recovery, and it is never cleared: a recovered claim is evidence, not a slot to reuse."
+    },
+    "accounting_revision": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Shared Invoice accounting CAS revision. Missing/null legacy values are not backfilled. Incremented by exact server-side $set on every authoritative claim/cancellation transition, separately from financial revision."
+    },
+    "claim_merit_sendinvoice_binding": {
+      "type": "object",
+      "description": "Immutable, non-secret accounting destination identity. Set only by trusted server code after independent destination verification. Credential references are not ledger identity.",
+      "properties": {
+        "companyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "merit"
+          ],
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "connectionId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "connectionRevision": {
+          "type": "number",
+          "minimum": 0
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "test",
+            "live"
+          ],
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "region": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "ledgerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "bindingId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "companyId",
+        "provider",
+        "connectionId",
+        "connectionRevision",
+        "environment",
+        "region",
+        "ledgerId",
+        "bindingId"
+      ],
+      "additionalProperties": false
+    },
+    "claim_merit_sendinvoice_state": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "preparing",
+        "preparation_failed",
+        "sending",
+        "needs_reconciliation",
+        "exported",
+        "aborted_before_send",
+        null
+      ],
+      "description": "Authoritative state on Invoice; AccountingExport is only a projection. No replacement send after send_authorized_at is set."
+    },
+    "claim_merit_sendinvoice_attempt_token": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Server-generated owner token; never accepted directly from a browser."
+    },
+    "claim_merit_sendinvoice_attempt_number": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 1,
+      "description": "Monotonic preparation generation. Fences stale workers even if a token string is reused."
+    },
+    "claim_merit_sendinvoice_lease_expires_at": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Epoch milliseconds for the CURRENT preparation or sending phase. Expiry alone never grants permission to resend."
+    },
+    "claim_merit_sendinvoice_send_authorized_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Irreversible single-use send-authorization marker. Never cleared, including after timeout, recovery or an empty lookup."
+    },
+    "claim_merit_sendinvoice_provider_document_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Set only after strict provider identity and financial matching."
+    },
+    "claim_merit_sendinvoice_error_code": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Bounded classification code, never a provider body or credential."
+    },
+    "accounting_pending_event": {
+      "type": "object",
+      "description": "Reserved bounded server-only transition outbox for later audit integration. Not used or populated by preparation stage B. No request/response bodies or credentials.",
+      "properties": {
+        "event_key": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "claim_ref": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "action": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "provider": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "from_revision": {
+          "type": "number"
+        },
+        "to_revision": {
+          "type": "number"
+        },
+        "occurred_at": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": [
