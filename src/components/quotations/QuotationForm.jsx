@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -10,9 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import FormField, { fieldErrorProps } from "@/components/FormField";
+import StickyFormFooter from "@/components/StickyFormFooter";
 import { useSession } from "@/lib/SessionContext";
 import { listClients } from "@/lib/clients-fns";
 import { createQuotation, updateQuotation } from "@/lib/quotations-fns";
+import { QUOTATION_REQUIRED_FIELDS, firstInvalidField, validateQuotationForm } from "@/lib/formValidation";
 import { addDaysISO, formatMoney, round2, todayISO } from "@/lib/format";
 import { hasConfiguredVat, taxFlagForInput } from "@/lib/quotationTax";
 import { useI18n } from "@/lib/i18n/I18nContext";
@@ -59,6 +62,8 @@ export default function QuotationForm({ quotation }) {
   const updateFn = useServerFn(updateQuotation);
   const [form, setForm] = useState(() => toFormState(quotation));
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const fieldRefs = useRef({});
   const currency = activeCompany?.currency || "EUR";
 
   useEffect(() => {
@@ -82,7 +87,13 @@ export default function QuotationForm({ quotation }) {
     return { subtotal, taxAmount, total: round2(subtotal + taxAmount) };
   }, [form.line_items, form.tax_rate]);
 
-  const update = (field, value) => setForm((previous) => ({ ...previous, [field]: value }));
+  const update = (field, value) => {
+    setForm((previous) => ({ ...previous, [field]: value }));
+    // A corrected field stops claiming to be wrong as soon as it holds a value again.
+    setErrors((previous) =>
+      previous[field] && String(value).trim() ? { ...previous, [field]: undefined } : previous,
+    );
+  };
 
   const updateLine = (index, field, value) =>
     setForm((previous) => ({
@@ -100,12 +111,24 @@ export default function QuotationForm({ quotation }) {
       line_items: previous.line_items.filter((_, lineIndex) => lineIndex !== index),
     }));
 
+  // Validates the form, shows the message under its own field and moves focus to the first problem.
+  // Returns whether the quotation may be saved.
+  const showErrors = () => {
+    const next = validateQuotationForm(form, t);
+    setErrors(next);
+    const first = firstInvalidField(next, QUOTATION_REQUIRED_FIELDS);
+    if (first) {
+      const control = fieldRefs.current[first];
+      control?.focus();
+      // Centre the field so its message is not left off screen or under the sticky footer.
+      control?.scrollIntoView?.({ block: "center" });
+    }
+    return !first;
+  };
+
   const submit = async (event) => {
     event.preventDefault();
-    if (!form.client_id) {
-      toast.error(t("quotations.select_client"));
-      return;
-    }
+    if (!showErrors()) return;
     setSaving(true);
     try {
       const payload = {
@@ -135,13 +158,35 @@ export default function QuotationForm({ quotation }) {
   };
 
   return (
-    <form onSubmit={submit} className="space-y-6">
+    <form
+      onSubmit={submit}
+      noValidate
+      className="space-y-6"
+      // Native validation is off above; if a browser applies it anyway, the form still answers with
+      // its own inline message instead of a bubble in the browser's language.
+      onInvalid={(event) => {
+        event.preventDefault();
+        showErrors();
+      }}
+    >
       <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <Label>{t("quotations.client")}</Label>
+          <FormField
+            id="quotation-client"
+            label={t("quotations.client")}
+            error={errors.client_id}
+            required
+            className="sm:col-span-2"
+          >
             <Select value={form.client_id || "none"} onValueChange={(value) => update("client_id", value === "none" ? "" : value)}>
-              <SelectTrigger className="mt-1.5">
+              <SelectTrigger
+                id="quotation-client"
+                ref={(element) => {
+                  fieldRefs.current.client_id = element;
+                }}
+                aria-required="true"
+                {...fieldErrorProps("quotation-client", errors.client_id)}
+              >
                 <SelectValue placeholder={t("quotations.select_client")} />
               </SelectTrigger>
               <SelectContent className="max-h-72">
@@ -153,7 +198,7 @@ export default function QuotationForm({ quotation }) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
           <div className="sm:col-span-2">
             <Label htmlFor="quotation-subject">{t("quotations.subject")}</Label>
             <Input
@@ -280,15 +325,15 @@ export default function QuotationForm({ quotation }) {
         />
       </section>
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={saving} className="gap-2">
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          {saving ? t("common.saving") : t("common.save")}
-        </Button>
+      <StickyFormFooter inset>
         <Button type="button" variant="ghost" onClick={() => navigate({ to: "/quotations" })}>
           {t("common.cancel")}
         </Button>
-      </div>
+        <Button type="submit" formNoValidate disabled={saving} className="gap-2">
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          {saving ? t("common.saving") : t("common.save")}
+        </Button>
+      </StickyFormFooter>
     </form>
   );
 }

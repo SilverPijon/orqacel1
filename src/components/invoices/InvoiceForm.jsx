@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -12,9 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import InvoiceLinesEditor from "@/components/invoices/InvoiceLinesEditor";
 import InvoiceTotalsSummary from "@/components/invoices/InvoiceTotalsSummary";
 import InvoicePaymentFields from "@/components/invoices/InvoicePaymentFields";
+import FormField, { fieldErrorProps } from "@/components/FormField";
+import StickyFormFooter from "@/components/StickyFormFooter";
 import { useSession } from "@/lib/SessionContext";
 import { listClients } from "@/lib/clients-fns";
 import { createInvoice, updateInvoice } from "@/lib/invoices-fns";
+import { INVOICE_REQUIRED_FIELDS, firstInvalidField, validateInvoiceForm } from "@/lib/formValidation";
 import { addDaysISO, todayISO } from "@/lib/format";
 import { computeInvoiceTotals, hasConfiguredInvoiceVat } from "@/lib/invoiceTotals";
 import { taxFlagForInput } from "@/lib/quotationTax";
@@ -86,6 +89,8 @@ export default function InvoiceForm({ invoice }) {
   const updateFn = useServerFn(updateInvoice);
   const [form, setForm] = useState(() => toFormState(invoice));
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const fieldRefs = useRef({});
   const currency = invoice?.currency || activeCompany?.currency || "EUR";
 
   useEffect(() => {
@@ -104,7 +109,13 @@ export default function InvoiceForm({ invoice }) {
   const vatRateSet = form.line_items.some((line) => taxFlagForInput(line.vat_rate));
   const vatConfigured = hasConfiguredInvoiceVat({ vat_rate_set: vatRateSet, line_items: totals.line_items });
 
-  const update = (field, value) => setForm((previous) => ({ ...previous, [field]: value }));
+  const update = (field, value) => {
+    setForm((previous) => ({ ...previous, [field]: value }));
+    // A corrected field stops claiming to be wrong as soon as it holds a value again.
+    setErrors((previous) =>
+      previous[field] && String(value).trim() ? { ...previous, [field]: undefined } : previous,
+    );
+  };
   const updatePayment = (field, value) =>
     setForm((previous) => ({ ...previous, payment: { ...previous.payment, [field]: value } }));
   const updateLine = (index, field, value) =>
@@ -121,12 +132,24 @@ export default function InvoiceForm({ invoice }) {
       line_items: previous.line_items.filter((_, lineIndex) => lineIndex !== index),
     }));
 
+  // Validates the form, shows the message under its own field and moves focus to the first problem.
+  // Returns whether the invoice may be saved.
+  const showErrors = () => {
+    const next = validateInvoiceForm(form, t);
+    setErrors(next);
+    const first = firstInvalidField(next, INVOICE_REQUIRED_FIELDS);
+    if (first) {
+      const control = fieldRefs.current[first];
+      control?.focus();
+      // Centre the field so its message is not left off screen or under the sticky footer.
+      control?.scrollIntoView?.({ block: "center" });
+    }
+    return !first;
+  };
+
   const submit = async (event) => {
     event.preventDefault();
-    if (!form.client_id) {
-      toast.error(t("invoices.select_customer"));
-      return;
-    }
+    if (!showErrors()) return;
     setSaving(true);
     try {
       const payload = {
@@ -158,16 +181,38 @@ export default function InvoiceForm({ invoice }) {
   };
 
   return (
-    <form onSubmit={submit} className="space-y-6">
+    <form
+      onSubmit={submit}
+      noValidate
+      className="space-y-6"
+      // Native validation is off above; if a browser applies it anyway, the form still answers with
+      // its own inline message instead of a bubble in the browser's language.
+      onInvalid={(event) => {
+        event.preventDefault();
+        showErrors();
+      }}
+    >
       <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <Label>{t("invoices.customer")}</Label>
+          <FormField
+            id="invoice-client"
+            label={t("invoices.customer")}
+            error={errors.client_id}
+            required
+            className="sm:col-span-2"
+          >
             <Select
               value={form.client_id || "none"}
               onValueChange={(value) => update("client_id", value === "none" ? "" : value)}
             >
-              <SelectTrigger className="mt-1.5">
+              <SelectTrigger
+                id="invoice-client"
+                ref={(element) => {
+                  fieldRefs.current.client_id = element;
+                }}
+                aria-required="true"
+                {...fieldErrorProps("invoice-client", errors.client_id)}
+              >
                 <SelectValue placeholder={t("invoices.select_customer")} />
               </SelectTrigger>
               <SelectContent className="max-h-72">
@@ -179,7 +224,7 @@ export default function InvoiceForm({ invoice }) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
           <div>
             <Label htmlFor="invoice-issue">{t("invoices.issue_date")}</Label>
             <Input
@@ -237,15 +282,15 @@ export default function InvoiceForm({ invoice }) {
         />
       </section>
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={saving} className="gap-2">
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          {saving ? t("common.saving") : t("common.save")}
-        </Button>
+      <StickyFormFooter inset>
         <Button type="button" variant="ghost" onClick={() => navigate({ to: "/invoices" })}>
           {t("common.cancel")}
         </Button>
-      </div>
+        <Button type="submit" formNoValidate disabled={saving} className="gap-2">
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          {saving ? t("common.saving") : t("common.save")}
+        </Button>
+      </StickyFormFooter>
     </form>
   );
 }

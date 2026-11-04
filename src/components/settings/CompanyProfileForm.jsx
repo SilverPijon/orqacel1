@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import FormField, { fieldErrorProps } from "@/components/FormField";
 import { useSession } from "@/lib/SessionContext";
 import { updateCompany } from "@/lib/tenant-fns";
+import { COMPANY_PROFILE_REQUIRED_FIELDS, firstInvalidField, validateCompanyProfileForm } from "@/lib/formValidation";
 import { COUNTRY_CODES, CURRENCIES, TIMEZONES, countryLabel } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
@@ -24,6 +26,8 @@ export default function CompanyProfileForm() {
   const updateFn = useServerFn(updateCompany);
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const fieldRefs = useRef({});
   const canEdit = permissions.canManage;
 
   useEffect(() => {
@@ -35,14 +39,27 @@ export default function CompanyProfileForm() {
     setForm(next);
   }, [activeCompany]);
 
-  const update = (field, value) => setForm((previous) => ({ ...previous, [field]: value }));
+  const update = (field, value) => {
+    setForm((previous) => ({ ...previous, [field]: value }));
+    // A corrected field stops claiming to be wrong as soon as it holds a value again.
+    setErrors((previous) =>
+      previous[field] && String(value).trim() ? { ...previous, [field]: undefined } : previous,
+    );
+  };
+
+  // Validates the form, shows the message under its own field and moves focus to it. Returns whether
+  // the profile may be saved.
+  const showErrors = () => {
+    const next = validateCompanyProfileForm(form, t);
+    setErrors(next);
+    const first = firstInvalidField(next, COMPANY_PROFILE_REQUIRED_FIELDS);
+    if (first) fieldRefs.current[first]?.focus();
+    return !first;
+  };
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!form.name.trim()) {
-      toast.error(t("common.required"));
-      return;
-    }
+    if (!showErrors()) return;
     setSaving(true);
     try {
       await updateFn({ data: { ...form, name: form.name.trim() } });
@@ -62,19 +79,37 @@ export default function CompanyProfileForm() {
         <p className="mt-1 text-sm text-muted-foreground">{t("settings.company_profile_desc")}</p>
       </header>
 
-      <form onSubmit={submit} className="space-y-4">
+      <form
+        onSubmit={submit}
+        noValidate
+        className="space-y-4"
+        // Native validation is off above; if a browser applies it anyway, the form still answers with
+        // its own inline message instead of a bubble in the browser's language.
+        onInvalid={(event) => {
+          event.preventDefault();
+          showErrors();
+        }}
+      >
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <Label htmlFor="company-name">{t("settings.company_name")}</Label>
+          <FormField
+            id="company-name"
+            label={t("settings.company_name")}
+            error={errors.name}
+            required
+            className="sm:col-span-2"
+          >
             <Input
               id="company-name"
-              className="mt-1.5"
+              ref={(element) => {
+                fieldRefs.current.name = element;
+              }}
               value={form.name}
               disabled={!canEdit}
               onChange={(event) => update("name", event.target.value)}
-              required
+              aria-required="true"
+              {...fieldErrorProps("company-name", errors.name)}
             />
-          </div>
+          </FormField>
           <div>
             <Label htmlFor="legal-name">{t("settings.legal_name")}</Label>
             <Input
@@ -218,7 +253,7 @@ export default function CompanyProfileForm() {
         </div>
 
         {canEdit ? (
-          <Button type="submit" disabled={saving} className="gap-2">
+          <Button type="submit" formNoValidate disabled={saving} className="gap-2">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             {saving ? t("common.saving") : t("common.save")}
           </Button>
