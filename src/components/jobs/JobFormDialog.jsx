@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import FormField, { fieldErrorProps } from "@/components/FormField";
 import StickyFormFooter from "@/components/StickyFormFooter";
 import { listClients } from "@/lib/clients-fns";
+import { JOB_REQUIRED_FIELDS, firstInvalidField, validateJobForm } from "@/lib/formValidation";
 import { createJob, updateJob } from "@/lib/jobs-fns";
 import { listMembers } from "@/lib/tenant-fns";
 import { JOB_PRIORITIES, JOB_STATUSES } from "@/lib/constants";
@@ -33,6 +34,7 @@ export default function JobFormDialog({ open, onOpenChange, job, onSaved, onConf
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const fieldRefs = useRef({});
 
   useEffect(() => {
     if (!open) return;
@@ -44,6 +46,8 @@ export default function JobFormDialog({ open, onOpenChange, job, onSaved, onConf
       next.price = String(job.price ?? 0);
     }
     setForm(next);
+    // A fresh open never shows the previous attempt's messages.
+    setErrors({});
   }, [open, job]);
 
   const clientsQuery = useQuery({
@@ -61,16 +65,32 @@ export default function JobFormDialog({ open, onOpenChange, job, onSaved, onConf
   const clients = clientsQuery.data?.items || [];
   const members = (membersQuery.data || []).filter((member) => member.user_id);
 
-  const update = (field, value) => setForm((previous) => ({ ...previous, [field]: value }));
+  const update = (field, value) => {
+    setForm((previous) => ({ ...previous, [field]: value }));
+    // A corrected field stops claiming to be wrong as soon as it holds a value again.
+    setErrors((previous) =>
+      previous[field] && String(value).trim() ? { ...previous, [field]: undefined } : previous,
+    );
+  };
+
+  // Validates the form, shows every message under its own field and moves focus to the first
+  // problem. Returns whether the form may be saved.
+  const showErrors = () => {
+    const next = validateJobForm(form, t);
+    setErrors(next);
+    const first = firstInvalidField(next, JOB_REQUIRED_FIELDS);
+    if (first) {
+      const control = fieldRefs.current[first];
+      control?.focus();
+      // Centre the field so the message underneath it is not left under the sticky footer.
+      control?.scrollIntoView?.({ block: "center" });
+    }
+    return !first;
+  };
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!form.title.trim()) {
-      // Shown under the field itself, where the problem is, instead of in a passing toast.
-      setErrors({ title: t("common.required") });
-      return;
-    }
-    setErrors({});
+    if (!showErrors()) return;
     setSaving(true);
     try {
       const payload = {
@@ -124,19 +144,34 @@ export default function JobFormDialog({ open, onOpenChange, job, onSaved, onConf
           <DialogTitle>{job ? t("jobs.edit") : t("jobs.new")}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={submit} noValidate className="space-y-4">
+        <form
+          onSubmit={submit}
+          noValidate
+          className="space-y-4"
+          // Native validation is off above; if a browser applies it anyway, the form still answers
+          // with its own inline messages instead of a bubble in the browser's language.
+          onInvalid={(event) => {
+            event.preventDefault();
+            showErrors();
+          }}
+        >
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField
               id="job-title"
               label={t("jobs.job_title")}
               error={errors.title}
+              required
               className="sm:col-span-2"
             >
               <Input
                 id="job-title"
+                ref={(element) => {
+                  fieldRefs.current.title = element;
+                }}
                 value={form.title}
                 onChange={(event) => update("title", event.target.value)}
                 required
+                aria-required="true"
                 {...fieldErrorProps("job-title", errors.title)}
               />
             </FormField>
@@ -290,7 +325,7 @@ export default function JobFormDialog({ open, onOpenChange, job, onSaved, onConf
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={saving} className="gap-2">
+            <Button type="submit" formNoValidate disabled={saving} className="gap-2">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {saving ? t("common.saving") : t("common.save")}
             </Button>

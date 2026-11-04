@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import FormField, { fieldErrorProps } from "@/components/FormField";
 import StickyFormFooter from "@/components/StickyFormFooter";
 import { createClient, updateClient } from "@/lib/clients-fns";
+import { CLIENT_REQUIRED_FIELDS, firstInvalidField, validateClientForm } from "@/lib/formValidation";
 import { COUNTRY_CODES, countryLabel } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
@@ -26,6 +27,7 @@ export default function ClientFormDialog({ open, onOpenChange, client, onSaved }
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const fieldRefs = useRef({});
 
   useEffect(() => {
     if (!open) return;
@@ -36,18 +38,36 @@ export default function ClientFormDialog({ open, onOpenChange, client, onSaved }
       });
     }
     setForm(next);
+    // A fresh open never shows the previous attempt's messages.
+    setErrors({});
   }, [open, client]);
 
-  const update = (field, value) => setForm((previous) => ({ ...previous, [field]: value }));
+  const update = (field, value) => {
+    setForm((previous) => ({ ...previous, [field]: value }));
+    // A corrected field stops claiming to be wrong as soon as it holds a value again.
+    setErrors((previous) =>
+      previous[field] && String(value).trim() ? { ...previous, [field]: undefined } : previous,
+    );
+  };
+
+  // Validates the form, shows every message under its own field and moves focus to the first
+  // problem. Returns whether the form may be saved.
+  const showErrors = () => {
+    const next = validateClientForm(form, t);
+    setErrors(next);
+    const first = firstInvalidField(next, CLIENT_REQUIRED_FIELDS);
+    if (first) {
+      const control = fieldRefs.current[first];
+      control?.focus();
+      // Centre the field so the message underneath it is not left under the sticky footer.
+      control?.scrollIntoView?.({ block: "center" });
+    }
+    return !first;
+  };
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!form.name.trim()) {
-      // Shown under the field itself, where the problem is, instead of in a passing toast.
-      setErrors({ name: t("common.required") });
-      return;
-    }
-    setErrors({});
+    if (!showErrors()) return;
     setSaving(true);
     try {
       if (client) await updateFn({ data: { id: client.id, ...form, name: form.name.trim() } });
@@ -69,19 +89,34 @@ export default function ClientFormDialog({ open, onOpenChange, client, onSaved }
           <DialogTitle>{client ? t("clients.edit") : t("clients.new")}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={submit} noValidate className="space-y-4">
+        <form
+          onSubmit={submit}
+          noValidate
+          className="space-y-4"
+          // Native validation is off above; if a browser applies it anyway, the form still answers
+          // with its own inline messages instead of a bubble in the browser's language.
+          onInvalid={(event) => {
+            event.preventDefault();
+            showErrors();
+          }}
+        >
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField
               id="client-name"
               label={t("common.name")}
               error={errors.name}
+              required
               className="sm:col-span-2"
             >
               <Input
                 id="client-name"
+                ref={(element) => {
+                  fieldRefs.current.name = element;
+                }}
                 value={form.name}
                 onChange={(event) => update("name", event.target.value)}
                 required
+                aria-required="true"
                 {...fieldErrorProps("client-name", errors.name)}
               />
             </FormField>
@@ -198,7 +233,7 @@ export default function ClientFormDialog({ open, onOpenChange, client, onSaved }
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={saving} className="gap-2">
+            <Button type="submit" formNoValidate disabled={saving} className="gap-2">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {saving ? t("common.saving") : t("common.save")}
             </Button>
