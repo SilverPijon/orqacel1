@@ -26,6 +26,8 @@ export default {
   "common.close": "Zamknij",
   "common.search": "Szukaj",
   "common.loading": "Ładowanie...",
+  "common.load_failed": "Nie udało się wczytać zawartości.",
+  "common.retry": "Spróbuj ponownie",
   "common.back": "Wstecz",
   "common.actions": "Akcje",
   "common.confirm": "Potwierdź",

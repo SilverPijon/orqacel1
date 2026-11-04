@@ -26,6 +26,8 @@ export default {
   "common.close": "Sulje",
   "common.search": "Haku",
   "common.loading": "Ladataan...",
+  "common.load_failed": "Sisältöä ei voitu ladata.",
+  "common.retry": "Yritä uudelleen",
   "common.back": "Takaisin",
   "common.actions": "Toiminnot",
   "common.confirm": "Vahvista",

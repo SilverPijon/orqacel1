@@ -13,6 +13,8 @@ import QuotationsTable from "@/components/quotations/QuotationsTable";
 import { usePagedList } from "@/hooks/usePagedList";
 import { useSession } from "@/lib/SessionContext";
 import { deleteQuotation, listQuotations } from "@/lib/quotations-fns";
+import ErrorState from "@/components/ErrorState";
+import TableSkeleton from "@/components/TableSkeleton";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 export const Route = createFileRoute("/_authed/quotations/")({
@@ -89,9 +91,9 @@ function QuotationsPage() {
       </div>
 
       {list.loading ? (
-        <div className="grid min-h-[30vh] place-items-center">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
+        <TableSkeleton label={t("common.loading")} />
+      ) : list.error ? (
+        <ErrorState onRetry={list.reload} />
       ) : list.items.length ? (
         <>
           <QuotationsTable

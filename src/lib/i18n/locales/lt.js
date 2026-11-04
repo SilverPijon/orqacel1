@@ -26,6 +26,8 @@ export default {
   "common.close": "Uždaryti",
   "common.search": "Ieškoti",
   "common.loading": "Kraunama...",
+  "common.load_failed": "Turinio įkelti nepavyko.",
+  "common.retry": "Bandyti dar kartą",
   "common.back": "Atgal",
   "common.actions": "Veiksmai",
   "common.confirm": "Patvirtinti",

@@ -8,6 +8,7 @@ import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
 import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
+import ErrorState from "@/components/ErrorState";
 import { useSession } from "@/lib/SessionContext";
 import { getDashboard } from "@/lib/dashboard-fns";
 import { formatMoney } from "@/lib/format";
@@ -37,6 +38,11 @@ function DashboardPage() {
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
+  }
+
+  // A failed load reads as a failure and can be retried, instead of showing zeros as if they were real.
+  if (query.isError) {
+    return <ErrorState onRetry={() => query.refetch()} />;
   }
 
   const data = query.data;

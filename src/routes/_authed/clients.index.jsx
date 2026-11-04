@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
+import ErrorState from "@/components/ErrorState";
+import TableSkeleton from "@/components/TableSkeleton";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import ClientFormDialog from "@/components/clients/ClientFormDialog";
 import ClientsTable from "@/components/clients/ClientsTable";
@@ -92,9 +94,9 @@ function ClientsPage() {
       </div>
 
       {list.loading ? (
-        <div className="grid min-h-[30vh] place-items-center">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
+        <TableSkeleton label={t("common.loading")} />
+      ) : list.error ? (
+        <ErrorState onRetry={list.reload} />
       ) : list.items.length ? (
         <>
           <ClientsTable

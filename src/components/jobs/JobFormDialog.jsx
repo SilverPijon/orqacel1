@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import FormField, { fieldErrorProps } from "@/components/FormField";
+import StickyFormFooter from "@/components/StickyFormFooter";
 import { listClients } from "@/lib/clients-fns";
 import { createJob, updateJob } from "@/lib/jobs-fns";
 import { listMembers } from "@/lib/tenant-fns";
@@ -30,6 +32,7 @@ export default function JobFormDialog({ open, onOpenChange, job, onSaved, onConf
   const fetchMembers = useServerFn(listMembers);
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (!open) return;
@@ -63,9 +66,11 @@ export default function JobFormDialog({ open, onOpenChange, job, onSaved, onConf
   const submit = async (event) => {
     event.preventDefault();
     if (!form.title.trim()) {
-      toast.error(t("common.required"));
+      // Shown under the field itself, where the problem is, instead of in a passing toast.
+      setErrors({ title: t("common.required") });
       return;
     }
+    setErrors({});
     setSaving(true);
     try {
       const payload = {
@@ -119,18 +124,22 @@ export default function JobFormDialog({ open, onOpenChange, job, onSaved, onConf
           <DialogTitle>{job ? t("jobs.edit") : t("jobs.new")}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={submit} noValidate className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <Label htmlFor="job-title">{t("jobs.job_title")}</Label>
+            <FormField
+              id="job-title"
+              label={t("jobs.job_title")}
+              error={errors.title}
+              className="sm:col-span-2"
+            >
               <Input
                 id="job-title"
-                className="mt-1.5"
                 value={form.title}
                 onChange={(event) => update("title", event.target.value)}
                 required
+                {...fieldErrorProps("job-title", errors.title)}
               />
-            </div>
+            </FormField>
             <div>
               <Label>{t("quotations.client")}</Label>
               <Select
@@ -277,7 +286,7 @@ export default function JobFormDialog({ open, onOpenChange, job, onSaved, onConf
             </div>
           </div>
 
-          <DialogFooter className="gap-2">
+          <StickyFormFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               {t("common.cancel")}
             </Button>
@@ -285,7 +294,7 @@ export default function JobFormDialog({ open, onOpenChange, job, onSaved, onConf
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {saving ? t("common.saving") : t("common.save")}
             </Button>
-          </DialogFooter>
+          </StickyFormFooter>
         </form>
       </DialogContent>
     </Dialog>

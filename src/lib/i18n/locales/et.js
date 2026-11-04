@@ -26,6 +26,8 @@ export default {
   "common.close": "Sulge",
   "common.search": "Otsi",
   "common.loading": "Laen...",
+  "common.load_failed": "Sisu ei õnnestunud laadida.",
+  "common.retry": "Proovi uuesti",
   "common.back": "Tagasi",
   "common.actions": "Tegevused",
   "common.confirm": "Kinnita",

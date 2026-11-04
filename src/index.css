@@ -129,6 +129,18 @@
     @apply border-border outline-ring/50;
   }
 
+  /* Visible keyboard focus on every interactive element, including custom controls that draw no
+     ring of their own. Components styled with their own focus ring keep it. */
+  :where(a, button, [role="button"], summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* An invalid field is marked by the field itself, not only by the message beneath it. Written
+     with !important so it beats the control's own border colour utility. */
+  [aria-invalid="true"] {
+    border-color: hsl(var(--destructive)) !important;
+  }
+
   body {
     @apply bg-background text-foreground font-body;
   }

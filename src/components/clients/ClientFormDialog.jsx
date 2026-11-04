@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import FormField, { fieldErrorProps } from "@/components/FormField";
+import StickyFormFooter from "@/components/StickyFormFooter";
 import { createClient, updateClient } from "@/lib/clients-fns";
 import { COUNTRY_CODES, countryLabel } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n/I18nContext";
@@ -23,6 +25,7 @@ export default function ClientFormDialog({ open, onOpenChange, client, onSaved }
   const updateFn = useServerFn(updateClient);
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (!open) return;
@@ -40,9 +43,11 @@ export default function ClientFormDialog({ open, onOpenChange, client, onSaved }
   const submit = async (event) => {
     event.preventDefault();
     if (!form.name.trim()) {
-      toast.error(t("common.required"));
+      // Shown under the field itself, where the problem is, instead of in a passing toast.
+      setErrors({ name: t("common.required") });
       return;
     }
+    setErrors({});
     setSaving(true);
     try {
       if (client) await updateFn({ data: { id: client.id, ...form, name: form.name.trim() } });
@@ -64,18 +69,22 @@ export default function ClientFormDialog({ open, onOpenChange, client, onSaved }
           <DialogTitle>{client ? t("clients.edit") : t("clients.new")}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={submit} noValidate className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <Label htmlFor="client-name">{t("common.name")}</Label>
+            <FormField
+              id="client-name"
+              label={t("common.name")}
+              error={errors.name}
+              className="sm:col-span-2"
+            >
               <Input
                 id="client-name"
-                className="mt-1.5"
                 value={form.name}
                 onChange={(event) => update("name", event.target.value)}
                 required
+                {...fieldErrorProps("client-name", errors.name)}
               />
-            </div>
+            </FormField>
             <div>
               <Label htmlFor="client-contact">{t("clients.contact_name")}</Label>
               <Input
@@ -185,7 +194,7 @@ export default function ClientFormDialog({ open, onOpenChange, client, onSaved }
             </div>
           </div>
 
-          <DialogFooter className="gap-2">
+          <StickyFormFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               {t("common.cancel")}
             </Button>
@@ -193,7 +202,7 @@ export default function ClientFormDialog({ open, onOpenChange, client, onSaved }
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {saving ? t("common.saving") : t("common.save")}
             </Button>
-          </DialogFooter>
+          </StickyFormFooter>
         </form>
       </DialogContent>
     </Dialog>

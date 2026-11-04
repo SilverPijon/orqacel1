@@ -26,6 +26,8 @@ export default {
   "common.close": "Aizvērt",
   "common.search": "Meklēt",
   "common.loading": "Ielādē...",
+  "common.load_failed": "Saturs nevarēja ielādēties.",
+  "common.retry": "Mēģināt vēlreiz",
   "common.back": "Atpakaļ",
   "common.actions": "Darbības",
   "common.confirm": "Apstiprināt",

@@ -26,6 +26,8 @@ export default {
   "common.close": "Stäng",
   "common.search": "Sök",
   "common.loading": "Laddar...",
+  "common.load_failed": "Innehållet kunde inte laddas.",
+  "common.retry": "Försök igen",
   "common.back": "Tillbaka",
   "common.actions": "Åtgärder",
   "common.confirm": "Bekräfta",

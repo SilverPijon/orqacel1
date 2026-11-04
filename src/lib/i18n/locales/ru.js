@@ -26,6 +26,8 @@ export default {
   "common.close": "Закрыть",
   "common.search": "Поиск",
   "common.loading": "Загрузка...",
+  "common.load_failed": "Не удалось загрузить содержимое.",
+  "common.retry": "Повторить",
   "common.back": "Назад",
   "common.actions": "Действия",
   "common.confirm": "Подтвердить",
