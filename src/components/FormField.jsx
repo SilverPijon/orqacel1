@@ -9,12 +9,14 @@ import { Label } from "@/components/ui/label";
 export default function FormField({ id, label, error, hint, required = false, className = "", children }) {
   return (
     <div className={className}>
-      <Label htmlFor={id}>
+      {/* data-required makes the requirement assertable from the DOM, not only by eye. */}
+      <Label htmlFor={id} data-required={required ? "true" : undefined}>
         {label}
         {required ? (
           // The marker is decoration: assistive technology reads the requirement from the
-          // control's own aria-required attribute, so nothing is announced twice.
-          <span aria-hidden="true" className="ml-0.5 text-destructive">
+          // control's own aria-required attribute, so nothing is announced twice. Bold and spaced
+          // so it reads as an indicator rather than as punctuation on the label text.
+          <span aria-hidden="true" className="ml-1 font-bold text-destructive">
             *
           </span>
         ) : null}
