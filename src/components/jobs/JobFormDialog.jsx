@@ -22,7 +22,7 @@ const EMPTY = {
   pause_reason: "", pause_note: "",
 };
 
-export default function JobFormDialog({ open, onOpenChange, job, onSaved }) {
+export default function JobFormDialog({ open, onOpenChange, job, onSaved, onConflict }) {
   const { t } = useI18n();
   const createFn = useServerFn(createJob);
   const updateFn = useServerFn(updateJob);
@@ -83,13 +83,30 @@ export default function JobFormDialog({ open, onOpenChange, job, onSaved }) {
         pause_reason: form.status === "paused" ? form.pause_reason : "",
         pause_note: form.status === "paused" ? form.pause_note.trim() : "",
       };
-      if (job) await updateFn({ data: { id: job.id, ...payload } });
-      else await createFn({ data: payload });
+      if (job) {
+        // The revision this form was opened on: a job saved or moved elsewhere meanwhile is
+        // reported by the server instead of this stale version overwriting the newer one.
+        await updateFn({
+          data: {
+            id: job.id,
+            ...payload,
+            expected_revision: Number.isInteger(job.revision) ? job.revision : 0,
+          },
+        });
+      } else await createFn({ data: payload });
       toast.success(t("common.saved"));
       onOpenChange(false);
       onSaved?.();
     } catch (error) {
-      toast.error(error?.message || t("common.error"));
+      if (error?.status === 409) {
+        // The job moved while this form was open. Leave the stale version alone and let the detail
+        // screen offer the latest data rather than saving over a change nobody here has seen.
+        toast.error(t("jobs.status_conflict"));
+        onOpenChange(false);
+        onConflict?.();
+      } else {
+        toast.error(error?.message || t("common.error"));
+      }
     } finally {
       setSaving(false);
     }

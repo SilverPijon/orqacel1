@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth-middleware";
 import { asArray, httpError, requireCompanyContext } from "@/lib/tenant.server";
 import { escapeRegex } from "@/lib/search";
 import { JOB_STATUS_VALUES, PAUSE_REASONS, canTransition, statusPatch } from "@/lib/jobStatus";
+import { currentRevision, nextRevision, writeJobConditionally } from "@/lib/jobWrites.server";
 
 const JobInput = z.object({
   title: z.string().min(1).max(160),
@@ -118,6 +119,7 @@ export const createJob = createServerFn({ method: "POST" })
       title: data.title.trim(),
       description: (data.description || "").trim(),
       status: data.status || "scheduled",
+      revision: 0,
       priority: data.priority || "medium",
       scheduled_date: data.scheduled_date || "",
       completed_date: data.completed_date || "",
@@ -136,7 +138,13 @@ export const createJob = createServerFn({ method: "POST" })
 
 export const updateJob = createServerFn({ method: "POST" })
   .middleware([requireUser])
-  .validator(JobInput.partial().extend({ id: z.string().min(1).max(64) }))
+  .validator(
+    JobInput.partial().extend({
+      id: z.string().min(1).max(64),
+      // The revision the form was opened on. A job that moved since is reported, never overwritten.
+      expected_revision: z.number().int().min(0),
+    }),
+  )
   .handler(async ({ data, context }) => {
     const session = await requireCompanyContext(context);
     const service = context.getBase44().asServiceRole;
@@ -190,8 +198,23 @@ export const updateJob = createServerFn({ method: "POST" })
       }
     }
 
-    await service.entities.Job.update(data.id, patch);
-    return { id: data.id };
+    if (!Object.keys(patch).length) return { id: data.id, revision: currentRevision(existing) };
+    // The revision the caller read must still be the stored one. The check below gives the honest
+    // answer early; the conditional write is what makes it hold when a write lands in between — a
+    // plain read followed by an unconditional update could still overwrite the newer version.
+    if (data.expected_revision !== currentRevision(existing)) {
+      throw httpError(409, "This job changed in the meantime", "STALE_JOB");
+    }
+    const written = await writeJobConditionally(
+      service,
+      existing,
+      { companyId: session.activeCompany.id },
+      patch,
+    );
+    if (written === 0) {
+      throw httpError(409, "This job changed in the meantime", "STALE_JOB");
+    }
+    return { id: data.id, revision: nextRevision(existing) };
   });
 
 export const updateJobStatus = createServerFn({ method: "POST" })
@@ -204,7 +227,7 @@ export const updateJobStatus = createServerFn({ method: "POST" })
       reason: z.enum(PAUSE_REASONS).optional(),
       note: z.string().max(500).optional(),
       // The status the caller saw. A job that moved meanwhile is reported, not overwritten.
-      expected_status: z.enum(JOB_STATUS_VALUES).optional(),
+      expected_status: z.enum(JOB_STATUS_VALUES),
     }),
   )
   .handler(async ({ data, context }) => {
@@ -216,11 +239,13 @@ export const updateJobStatus = createServerFn({ method: "POST" })
     if (!existing || existing.company_id !== session.activeCompany.id) {
       throw httpError(404, "Job not found", "NOT_FOUND");
     }
+    // The status the caller saw must still be the stored one: a job that moved — by a status change
+    // or by an edit that raised its revision — is reported instead of overwritten.
+    if (data.expected_status !== existing.status) {
+      throw httpError(409, "This job changed in the meantime", "STALE_STATUS");
+    }
     if (existing.status === data.status) {
       return { id: data.id, status: existing.status, unchanged: true };
-    }
-    if (data.expected_status && data.expected_status !== existing.status) {
-      throw httpError(409, "This job changed in the meantime", "STALE_STATUS");
     }
     if (!canTransition(existing.status, data.status)) {
       throw httpError(409, "That status change isn't allowed for this job", "INVALID_TRANSITION");
@@ -229,7 +254,15 @@ export const updateJobStatus = createServerFn({ method: "POST" })
     // Only the status, its pause details and the completion date are written: client, quotation
     // link, scheduled date, assignment and price are never touched by a status change.
     const patch = statusPatch(existing.status, data.status, { reason: data.reason, note: data.note });
-    await service.entities.Job.update(data.id, patch);
+    const written = await writeJobConditionally(
+      service,
+      existing,
+      { companyId: session.activeCompany.id, expectedStatus: existing.status },
+      patch,
+    );
+    if (written === 0) {
+      throw httpError(409, "This job changed in the meantime", "STALE_STATUS");
+    }
     return { id: data.id, status: data.status, pause_reason: patch.pause_reason || "" };
   });
 

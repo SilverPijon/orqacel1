@@ -127,7 +127,13 @@ function JobsPage() {
         </EmptyState>
       )}
 
-      <JobFormDialog open={formOpen} onOpenChange={setFormOpen} job={editing} onSaved={() => list.reload()} />
+      <JobFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        job={editing}
+        onSaved={() => list.reload()}
+        onConflict={() => list.reload()}
+      />
 
       <ConfirmDeleteDialog
         open={Boolean(pendingDelete)}

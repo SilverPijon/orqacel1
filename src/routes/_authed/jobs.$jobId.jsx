@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, FileText, Loader2, Pause, Pencil, Play } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, Pause, Pencil, Play, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/PageHeader";
@@ -34,6 +34,7 @@ function JobDetailPage() {
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [pauseOpen, setPauseOpen] = useState(false);
+  const [stale, setStale] = useState(false);
 
   const query = useQuery({
     queryKey: ["job", jobId],
@@ -56,18 +57,36 @@ function JobDetailPage() {
   const statusMeta = JOB_STATUS[job.status] || JOB_STATUS.scheduled;
   const priorityMeta = JOB_PRIORITY[job.priority] || JOB_PRIORITY.medium;
 
-  // The existing status setter. It gains nothing new except that a pause may carry its reason
-  // and note; every other move behaves exactly as before.
+  // The status this screen loaded travels with the change: a job that moved since is reported to
+  // the server rather than overwritten. A pause may carry its reason and note; every other move
+  // behaves exactly as before.
   const setStatus = async (status, extra = {}) => {
     setBusy(true);
     try {
-      await statusFn({ data: { id: job.id, status, ...extra } });
+      await statusFn({ data: { id: job.id, status, expected_status: job.status, ...extra } });
       setPauseOpen(false);
-      await query.refetch();
       toast.success(t("common.saved"));
-    } catch (error) {
-      toast.error(error?.status === 409 ? t("jobs.status_conflict") : error?.message || t("common.error"));
       await query.refetch();
+    } catch (error) {
+      if (error?.status === 409) {
+        // Nothing was written. Offer the latest job instead of guessing what this screen missed.
+        setPauseOpen(false);
+        setStale(true);
+      } else {
+        toast.error(error?.message || t("common.error"));
+        await query.refetch();
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Loads the job as it stands now and clears the conflict notice.
+  const refreshLatest = async () => {
+    setBusy(true);
+    try {
+      await query.refetch();
+      setStale(false);
     } finally {
       setBusy(false);
     }
@@ -103,6 +122,19 @@ function JobDetailPage() {
           {t("common.edit")}
         </Button>
       </PageHeader>
+
+      {stale ? (
+        <div
+          role="status"
+          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/40 bg-warning-muted px-4 py-3"
+        >
+          <p className="type-body text-warning">{t("jobs.status_conflict")}</p>
+          <Button size="sm" variant="outline" className="gap-2" disabled={busy} onClick={refreshLatest}>
+            <RefreshCw className="h-4 w-4" />
+            {t("jobs.refresh_latest")}
+          </Button>
+        </div>
+      ) : null}
 
       <section className="rounded-2xl border border-border bg-card shadow-card p-5 sm:p-6">
         <dl className="grid gap-4 sm:grid-cols-3">
@@ -208,7 +240,13 @@ function JobDetailPage() {
         ) : null}
       </div>
 
-      <JobFormDialog open={editing} onOpenChange={setEditing} job={job} onSaved={() => query.refetch()} />
+      <JobFormDialog
+        open={editing}
+        onOpenChange={setEditing}
+        job={job}
+        onSaved={() => query.refetch()}
+        onConflict={() => setStale(true)}
+      />
 
       <PauseJobDialog
         open={pauseOpen}

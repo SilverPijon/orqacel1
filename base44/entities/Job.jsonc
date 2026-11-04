@@ -33,6 +33,11 @@
       "default": "scheduled",
       "description": "Job lifecycle state. 'paused' was added later and means work is temporarily suspended: the job keeps its dates, client, quotation link and price. Existing records only ever hold the original four values, which keep their meaning."
     },
+    "revision": {
+      "type": "number",
+      "default": 0,
+      "description": "Version of this job's stored content, increased by every write. Every update is written only while the job still reads as the caller saw it, so a stale screen is told the job moved instead of overwriting a newer change. Written only by the app's server functions."
+    },
     "pause_reason": {
       "type": "string",
       "description": "Why a paused job is suspended. One of materials, customer, weather, other, or empty when no reason was given. Optional by design."
@@ -96,19 +101,13 @@
       }
     },
     "create": {
-      "data.company_id": {
-        "$in": "{{user.data.company_ids}}"
-      }
+      "created_by_id": "__app_users_may_not_write_jobs__"
     },
     "update": {
-      "data.company_id": {
-        "$in": "{{user.data.company_ids}}"
-      }
+      "created_by_id": "__app_users_may_not_write_jobs__"
     },
     "delete": {
-      "data.company_id": {
-        "$in": "{{user.data.company_ids}}"
-      }
+      "created_by_id": "__app_users_may_not_write_jobs__"
     }
   }
 }
