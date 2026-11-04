@@ -1,0 +1,77 @@
+{
+  "name": "AccountingCustomerLink",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Owning company \u2014 the tenant boundary."
+    },
+    "client_id": {
+      "type": "string",
+      "description": "The Orqacel customer this link belongs to, always inside the same company."
+    },
+    "connection_id": {
+      "type": "string",
+      "description": "The AccountingConnection whose provider this link points into"
+    },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "merit",
+        "simplbooks",
+        "smartaccounts"
+      ]
+    },
+    "remote_customer_id": {
+      "type": "string",
+      "description": "The customer's identifier at the provider"
+    },
+    "remote_customer_name": {
+      "type": "string",
+      "description": "The customer's name as the provider stores it, so a mismatch with the Orqacel name is visible rather than silent"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "stale",
+        "unlinked"
+      ],
+      "default": "active",
+      "description": "stale means the remote customer could no longer be confirmed. A link is never silently repointed at a different remote customer."
+    },
+    "linked_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "linked_by_id": {
+      "type": "string",
+      "description": "Owner or Admin who created the link, or empty when a server-side match established it"
+    },
+    "last_verified_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "company_id",
+    "client_id",
+    "provider"
+  ],
+  "rls": {
+    "read": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "create": {
+      "created_by_id": "__server_functions_only__"
+    },
+    "update": {
+      "created_by_id": "__server_functions_only__"
+    },
+    "delete": {
+      "created_by_id": "__server_functions_only__"
+    }
+  }
+}

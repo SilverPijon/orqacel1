@@ -1,0 +1,114 @@
+{
+  "name": "AccountingExport",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Owning company \u2014 the tenant boundary."
+    },
+    "export_key": {
+      "type": "string",
+      "description": "Stable identity of what is being exported: company_id:invoice_id:kind. The claim lives on the invoice itself; this key is only how the export row is found again."
+    },
+    "invoice_id": {
+      "type": "string",
+      "description": "The issued invoice being exported. Always resolved inside the same company."
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Customer of the invoice at export time, for reporting only"
+    },
+    "connection_id": {
+      "type": "string",
+      "description": "AccountingConnection used for this export. Metadata: reconnecting a provider never changes what has already been exported."
+    },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "merit",
+        "simplbooks",
+        "smartaccounts"
+      ]
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "invoice",
+        "credit_note"
+      ],
+      "default": "invoice"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "not_exported",
+        "preparing",
+        "sending",
+        "exported",
+        "failed_retryable",
+        "failed_permanent",
+        "needs_reconciliation"
+      ],
+      "default": "not_exported",
+      "description": "Where this export stands. Only exported is terminal. needs_reconciliation is the only exit from an ambiguous outcome and is never retried automatically."
+    },
+    "version": {
+      "type": "number",
+      "default": 0,
+      "description": "Increased by every state change. Each transition is written as a conditional update on the version that was read, so two workers can never both settle the same attempt."
+    },
+    "attempts": {
+      "type": "number",
+      "default": 0
+    },
+    "lease_expires_at": {
+      "type": "number",
+      "description": "Epoch milliseconds when the current send attempt stops being trusted. An expired lease means the worker died mid-flight, which routes to reconciliation, never to a blind resend."
+    },
+    "next_attempt_at": {
+      "type": "number",
+      "description": "Epoch milliseconds before which a retryable failure must not be retried"
+    },
+    "provider_document_id": {
+      "type": "string",
+      "description": "Identifier of the document at the provider, once it is known"
+    },
+    "provider_document_no": {
+      "type": "string",
+      "description": "Human-readable document number at the provider, once it is known"
+    },
+    "error_code": {
+      "type": "string",
+      "description": "Classification of the last refusal or failure. A code, never a provider response body."
+    },
+    "requested_by_id": {
+      "type": "string",
+      "description": "Owner or Admin who asked for the export"
+    },
+    "last_actor_id": {
+      "type": "string",
+      "description": "Who caused the most recent state change: a user id, or empty when a system worker did"
+    }
+  },
+  "required": [
+    "company_id",
+    "invoice_id",
+    "export_key"
+  ],
+  "rls": {
+    "read": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "create": {
+      "created_by_id": "__server_functions_only__"
+    },
+    "update": {
+      "created_by_id": "__server_functions_only__"
+    },
+    "delete": {
+      "created_by_id": "__server_functions_only__"
+    }
+  }
+}

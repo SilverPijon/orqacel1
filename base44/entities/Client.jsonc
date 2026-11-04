@@ -28,10 +28,23 @@
       "type": "string"
     },
     "country": {
-      "type": "string"
+      "type": "string",
+      "description": "Country as shown on documents. Kept for display and for the payment-reference rules; the canonical ISO code used by accounting lives in country_code."
     },
     "tax_id": {
       "type": "string"
+    },
+    "registration_number": {
+      "type": "string",
+      "description": "Optional company registration number of the customer. Captured into the buyer snapshot of invoices issued after this field exists; already issued invoices keep what they froze."
+    },
+    "vat_registered": {
+      "type": "boolean",
+      "description": "Explicit VAT registration status: true = registered, false = recorded as not registered, absent/null = never recorded. Deliberately nullable so an explicit 'no' is never confused with 'unknown'."
+    },
+    "country_code": {
+      "type": "string",
+      "description": "ISO 3166-1 alpha-2 country code, stored upper case, used for VAT treatment and accounting export. Separate from country so a display value can never be mistaken for a code."
     },
     "notes": {
       "type": "string"

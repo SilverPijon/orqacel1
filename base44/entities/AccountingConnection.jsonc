@@ -1,0 +1,106 @@
+{
+  "name": "AccountingConnection",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Owning company \u2014 the tenant boundary. A connection is never readable or usable outside its own company."
+    },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "merit",
+        "simplbooks",
+        "smartaccounts"
+      ],
+      "description": "Which accounting service this connection belongs to. One company may hold at most one active connection per provider."
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Name shown to the user, for example the accounting company name at the provider"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "disabled",
+        "error"
+      ],
+      "default": "disabled",
+      "description": "Only an active connection may be used for an export. A new connection starts disabled until it has been verified by a server-side check."
+    },
+    "environment": {
+      "type": "string",
+      "enum": [
+        "test",
+        "live"
+      ],
+      "default": "test",
+      "description": "Which provider environment the connection talks to. Test connections can never be promoted to live without an explicit server-side action."
+    },
+    "credentials_ref": {
+      "type": "string",
+      "description": "Opaque reference to where this connection's credential lives outside this record. It is a pointer, never the credential: no API key, secret, ciphertext or master key is stored on this entity."
+    },
+    "country_code": {
+      "type": "string",
+      "description": "ISO 3166-1 alpha-2 country the accounting ledger is kept in, used to pick VAT and document rules"
+    },
+    "settings": {
+      "type": "object",
+      "description": "Non-secret provider settings, such as a VAT code or document series. Never holds credential material.",
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "series": {
+          "type": "string"
+        },
+        "vat_code": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "connected_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "connected_by_id": {
+      "type": "string",
+      "description": "Owner or Admin who established the connection"
+    },
+    "last_verified_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When a server-side check last confirmed the credential still works"
+    },
+    "disconnected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the connection was disabled. Kept for history; a disabled connection is never deleted while exports reference it."
+    }
+  },
+  "required": [
+    "company_id",
+    "provider"
+  ],
+  "rls": {
+    "read": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "create": {
+      "created_by_id": "__server_functions_only__"
+    },
+    "update": {
+      "created_by_id": "__server_functions_only__"
+    },
+    "delete": {
+      "created_by_id": "__server_functions_only__"
+    }
+  }
+}

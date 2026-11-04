@@ -216,6 +216,18 @@
         },
         "tax_id": {
           "type": "string"
+        },
+        "registration_number": {
+          "type": "string",
+          "description": "Customer registration number as it was at issue time. Captured only for invoices issued after this field existed; earlier snapshots are left exactly as they were."
+        },
+        "country_code": {
+          "type": "string",
+          "description": "ISO 3166-1 alpha-2 country code of the customer at issue time. Captured only for invoices issued after this field existed."
+        },
+        "vat_registered": {
+          "type": "boolean",
+          "description": "Explicit VAT registration status of the customer at issue time. Absent means the status was never recorded; false is a recorded 'not VAT registered'."
         }
       }
     },
@@ -268,6 +280,24 @@
       "type": "string",
       "format": "date-time",
       "description": "When the invoice was cancelled"
+    },
+    "claim_merit_sendinvoice_ref": {
+      "type": "string",
+      "description": "Single-use reference held by whoever is currently allowed to export this invoice to Merit as a sales invoice. Claimed with one conditional update that only applies while the field is empty AND the invoice is still issued, so exactly one caller can ever win. Written only by the accounting export server code: invoice create, edit, issue and cancel never touch it."
+    },
+    "claim_merit_sendinvoice_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the Merit send-invoice claim above was taken. Read with the claim reference to decide whether the claim is still within its lease or has to be recovered through reconciliation."
+    },
+    "claim_merit_sendinvoice_connection_id": {
+      "type": "string",
+      "description": "The AccountingConnection the claim was taken under. Metadata only: it never changes which invoice is claimed, and reconnecting a provider cannot move an existing claim."
+    },
+    "claim_merit_sendinvoice_recovered_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Set once, by a recovery worker, when an interrupted claim was handed to reconciliation. Its own conditional gate admits exactly one recovery, and it is never cleared: a recovered claim is evidence, not a slot to reuse."
     }
   },
   "required": [

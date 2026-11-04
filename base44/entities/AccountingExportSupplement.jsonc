@@ -1,0 +1,114 @@
+{
+  "name": "AccountingExportSupplement",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Owning company \u2014 the tenant boundary."
+    },
+    "invoice_id": {
+      "type": "string",
+      "description": "The original invoice this supplement corrects. Always inside the same company."
+    },
+    "export_id": {
+      "type": "string",
+      "description": "The AccountingExport of the original invoice, when it was exported. A supplement never reuses that export's claim."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "credit_note",
+        "adjustment"
+      ],
+      "description": "What sort of correcting document this is. A credit note is the only correct answer to an invoice that was already exported and then cancelled."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Why the supplement exists, in the user's words"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "issued",
+        "exported",
+        "cancelled"
+      ],
+      "default": "draft",
+      "description": "A supplement is issued before it is exported, and freezes its amounts at issue time like an invoice does."
+    },
+    "currency": {
+      "type": "string"
+    },
+    "subtotal": {
+      "type": "number"
+    },
+    "vat_amount": {
+      "type": "number"
+    },
+    "total": {
+      "type": "number"
+    },
+    "line_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unit_price": {
+            "type": "number"
+          },
+          "vat_rate": {
+            "type": "number"
+          },
+          "line_total": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "provider_document_id": {
+      "type": "string"
+    },
+    "provider_document_no": {
+      "type": "string"
+    },
+    "created_by_id_note": {
+      "type": "string",
+      "description": "Reserved. Records who issued the supplement beyond the built-in created_by_id, for example after an account is removed."
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "company_id",
+    "invoice_id",
+    "kind"
+  ],
+  "rls": {
+    "read": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "create": {
+      "created_by_id": "__server_functions_only__"
+    },
+    "update": {
+      "created_by_id": "__server_functions_only__"
+    },
+    "delete": {
+      "created_by_id": "__server_functions_only__"
+    }
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "name": "AccountingExportEvent",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Owning company \u2014 the tenant boundary."
+    },
+    "export_id": {
+      "type": "string",
+      "description": "The AccountingExport this event belongs to, when one exists yet"
+    },
+    "invoice_id": {
+      "type": "string"
+    },
+    "export_key": {
+      "type": "string",
+      "description": "Company:invoice:kind, so an event is readable even before an export row exists"
+    },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "merit",
+        "simplbooks",
+        "smartaccounts"
+      ]
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "invoice",
+        "credit_note"
+      ],
+      "default": "invoice"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "connect",
+        "disconnect",
+        "mode_changed",
+        "export_validation_failed",
+        "export_sent",
+        "export_confirmed",
+        "export_failed",
+        "export_ambiguous",
+        "export_recovery_required",
+        "reconcile_found",
+        "reconcile_absent",
+        "reconcile_conflict"
+      ],
+      "description": "What happened. This entity has no free-form payload field on purpose: events are built from an explicit whitelist, so no credential, request body or provider response can ever be stored here."
+    },
+    "actor_user_id": {
+      "type": "string"
+    },
+    "actor_role": {
+      "type": "string"
+    },
+    "from_state": {
+      "type": "string"
+    },
+    "to_state": {
+      "type": "string"
+    },
+    "attempt": {
+      "type": "number"
+    },
+    "error_code": {
+      "type": "string"
+    },
+    "provider_document_id": {
+      "type": "string"
+    },
+    "provider_document_no": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "number",
+      "description": "Epoch milliseconds when the event happened. Append-only: an event is never edited or deleted, it is only written."
+    }
+  },
+  "required": [
+    "company_id",
+    "action"
+  ],
+  "rls": {
+    "read": {
+      "data.company_id": {
+        "$in": "{{user.data.company_ids}}"
+      }
+    },
+    "create": {
+      "created_by_id": "__server_functions_only__"
+    },
+    "update": {
+      "created_by_id": "__server_functions_only__"
+    },
+    "delete": {
+      "created_by_id": "__server_functions_only__"
+    }
+  }
+}

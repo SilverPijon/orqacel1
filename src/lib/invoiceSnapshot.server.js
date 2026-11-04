@@ -33,7 +33,9 @@ const BUYER_FIELDS = [
   "city",
   "postal_code",
   "country",
+  "country_code",
   "tax_id",
+  "registration_number",
 ];
 
 // Only fields that actually hold something are kept, so a snapshot never carries empty values that
@@ -54,7 +56,13 @@ export function buildSellerSnapshot(company) {
 }
 
 export function buildBuyerSnapshot(client) {
-  return pick(client, BUYER_FIELDS);
+  const snapshot = pick(client, BUYER_FIELDS);
+  // An explicit VAT answer is a fact, not a blank: "recorded as not VAT registered" and "never
+  // recorded" are different answers for an accounting export, so false is kept while an absent
+  // value is simply not captured. Only invoices issued from now on carry it; snapshots that were
+  // already frozen are never rewritten.
+  if (typeof client?.vat_registered === "boolean") snapshot.vat_registered = client.vat_registered;
+  return snapshot;
 }
 
 // The fields that make up the payment details of an invoice.
