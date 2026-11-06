@@ -16,7 +16,7 @@ import {
   resolveAsExported,
 } from "../export/stateMachine.js";
 import { OUTCOMES } from "../merit/response.js";
-import { RECONCILE_CODES, RECONCILE_OUTCOMES, reconcileLookup } from "../export/reconciliation.js";
+import { RECONCILE_CODES, RECONCILE_OUTCOMES, MOCK_LOOKUP_CONTRACT, reconcileLookup } from "../export/reconciliation.js";
 import { makeInvoice } from "../testing/fixtures.js";
 
 const KEY = exportKey(makeInvoice());
@@ -113,24 +113,18 @@ test("backoff grows and stays capped", () => {
 });
 
 test("10. duplicate lookup distinguishes found, absent and conflicting documents", () => {
-  const found = reconcileLookup({ matches: [{ SIHId: "sih-1", InvoiceNo: "INV-1001", TotalSum: 1785 }], expected: { total: 1785 } });
+  const expected = { number: "INV-1001", currency: "EUR", subtotal: 1500, vat: 285, total: 1785 };
+  const evidence = { contract: MOCK_LOOKUP_CONTRACT, complete: true, authoritative: true, invoiceNo: expected.number, currency: expected.currency, nextCursor: null };
+  const document = { SIHId: "sih-1", InvoiceNo: expected.number, CurrencyCode: expected.currency, TotalAmount: 1500, VatAmount: 285, TotalSum: 1785 };
+  const lookup = (matches) => reconcileLookup({ matches, expected, evidence });
+  const found = lookup([document]);
   assert.equal(found.outcome, RECONCILE_OUTCOMES.FOUND);
   assert.equal(found.document.id, "sih-1");
-
-  const absent = reconcileLookup({ matches: [], expected: { total: 1785 } });
-  assert.equal(absent.outcome, RECONCILE_OUTCOMES.ABSENT);
-
-  const multiple = reconcileLookup({
-    matches: [
-      { SIHId: "a", InvoiceNo: "INV-1001", TotalSum: 1785 },
-      { SIHId: "b", InvoiceNo: "INV-1001", TotalSum: 1785 },
-    ],
-    expected: { total: 1785 },
-  });
+  assert.equal(lookup([]).outcome, RECONCILE_OUTCOMES.ABSENT);
+  const multiple = lookup([document, { ...document, SIHId: "b" }]);
   assert.equal(multiple.outcome, RECONCILE_OUTCOMES.CONFLICT);
   assert.equal(multiple.code, RECONCILE_CODES.MULTIPLE_MATCHES);
-
-  const mismatch = reconcileLookup({ matches: [{ SIHId: "a", InvoiceNo: "INV-1001", TotalSum: 999 }], expected: { total: 1785 } });
+  const mismatch = lookup([{ ...document, TotalSum: 999 }]);
   assert.equal(mismatch.outcome, RECONCILE_OUTCOMES.CONFLICT);
   assert.equal(mismatch.code, RECONCILE_CODES.AMOUNT_MISMATCH);
 });

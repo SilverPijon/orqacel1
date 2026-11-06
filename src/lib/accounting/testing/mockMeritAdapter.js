@@ -1,10 +1,12 @@
 /**
  * Mock Merit adapter.
  *
- * Test-only: it reproduces the documented response shapes (including the ones that are easy to
- * get wrong) and records what it was asked to do. It performs no network access and needs no
- * credentials. Behaviour that cannot be scripted is left out rather than simulated.
+ * Test-only: scripted acknowledgements/errors plus explicit synthetic document/search
+ * evidence for safety tests. Expanded evidence is an internal mock contract, not a claim
+ * about Merit API guarantees. No network access or credentials.
  */
+
+import { MOCK_LOOKUP_CONTRACT, MOCK_DOCUMENT_CONTRACT } from "../export/reconciliation.js";
 
 const GUID = {
   tax24: "11111111-1111-4111-8111-111111111111",
@@ -20,6 +22,8 @@ function documentFrom(payload, index) {
   return {
     SIHId: `sih-${index}`,
     InvoiceNo: payload.InvoiceNo,
+    CurrencyCode: payload.CurrencyCode,
+    VatAmount: (payload.TaxAmount || []).reduce((sum, row) => sum + Number(row.Amount || 0), 0),
     TotalSum: grossOf(payload),
     TotalAmount: Number(payload.TotalAmount || 0),
     CustomerId: "cust-1",
@@ -96,37 +100,41 @@ export function createMockMeritAdapter(options = {}) {
 
     return {
       status: 200,
-      bodyText: JSON.stringify({
-        CustomerId: doc.CustomerId,
-        InvoiceId: doc.SIHId,
-        InvoiceNo: payload.InvoiceNo,
-        RefNo: payload.RefNo ?? null,
-      }),
+      documentEvidence: { contract: MOCK_DOCUMENT_CONTRACT },
+      // Expanded synthetic evidence for strict matching, NOT a Merit response guarantee.
+      bodyText: JSON.stringify({ ...doc, InvoiceId: doc.SIHId, RefNo: payload.RefNo ?? null }),
     };
   }
 
-  async function lookupByInvoiceNo(number) {
+  async function lookupByInvoiceNo(number, { currency } = {}) {
     calls.push({ op: "lookupByInvoiceNo", number });
     lookupCount += 1;
     await wait();
 
+    // This mock owns the entire in-memory ledger and can assert exhaustive exact searches.
+    // A future real adapter must not copy these guarantees without verifying its contract.
+    const response = (matches) => ({
+      status: 200,
+      bodyText: JSON.stringify(matches),
+      lookupEvidence: { contract: MOCK_LOOKUP_CONTRACT, complete: true, authoritative: true, invoiceNo: number, currency, nextCursor: null },
+    });
     const mode = behaviour.lookup || "stored";
 
     if (mode === "error") throw new Error("lookup failed");
 
-    if (mode === "none") return { status: 200, bodyText: JSON.stringify([]) };
+    if (mode === "none") return response([]);
 
     if (mode === "multiple") {
-      const matches = [documentFrom({ InvoiceNo: number, TotalAmount: 1500, TaxAmount: [] }, 1), documentFrom({ InvoiceNo: number, TotalAmount: 1500, TaxAmount: [] }, 2)];
-      return { status: 200, bodyText: JSON.stringify(matches) };
+      const matches = [documentFrom({ InvoiceNo: number, CurrencyCode: currency, TotalAmount: 1500, TaxAmount: [] }, 1), documentFrom({ InvoiceNo: number, CurrencyCode: currency, TotalAmount: 1500, TaxAmount: [] }, 2)];
+      return response(matches);
     }
 
     if (mode === "mismatch") {
-      return { status: 200, bodyText: JSON.stringify([{ SIHId: "sih-x", InvoiceNo: number, TotalSum: 999 }]) };
+      return response([{ SIHId: "sih-x", InvoiceNo: number, CurrencyCode: currency, TotalAmount: 1500, VatAmount: 285, TotalSum: 999 }]);
     }
 
-    const matches = stored.filter((doc) => doc.InvoiceNo === number);
-    return { status: 200, bodyText: JSON.stringify(matches) };
+    const matches = stored.filter((doc) => doc.InvoiceNo === number && doc.CurrencyCode === currency);
+    return response(matches);
   }
 
   return {

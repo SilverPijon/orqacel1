@@ -22,7 +22,7 @@ import {
   resolveAsAbsent,
   resolveAsExported,
 } from "./stateMachine.js";
-import { RECONCILE_OUTCOMES, reconcileLookup } from "./reconciliation.js";
+import { RECONCILE_OUTCOMES, expectedDocument, confirmResponse, reconcileResponse } from "./reconciliation.js";
 import { AUDIT_ACTIONS, createAuditEvent } from "./audit.js";
 
 export const AUTHORIZED_ROLES = Object.freeze(["owner", "admin"]);
@@ -64,18 +64,6 @@ function actionFor(classification) {
   if (classification.outcome === OUTCOMES.REJECTED) return AUDIT_ACTIONS.EXPORT_FAILED;
   if (classification.outcome === OUTCOMES.RETRYABLE) return AUDIT_ACTIONS.EXPORT_FAILED;
   return AUDIT_ACTIONS.EXPORT_AMBIGUOUS;
-}
-
-function parseLookupMatches(response) {
-  const text = response?.bodyText ?? response?.body ?? "";
-  try {
-    const parsed = JSON.parse(text);
-    if (Array.isArray(parsed)) return parsed;
-    if (parsed && typeof parsed === "object") return [parsed];
-    return [];
-  } catch {
-    return [];
-  }
 }
 
 /**
@@ -128,7 +116,8 @@ export async function runExport({ invoice, connection, store, adapter, actor = {
   if (!mapped.ok) {
     const settled = applyResult(claimed, { outcome: OUTCOMES.REJECTED, code: "validation_failed" }, { now });
     const saved = await store.cas(key, claimed.version, settled);
-    const record = saved.ok ? settled : saved.current;
+    if (!saved.ok) return { outcome: "conflict", code: "cas_conflict", record: saved.current };
+    const record = settled;
     await store.appendAudit(
       baseEvent({
         action: AUDIT_ACTIONS.EXPORT_VALIDATION_FAILED,
@@ -153,14 +142,24 @@ export async function runExport({ invoice, connection, store, adapter, actor = {
 
   let classification;
   try {
-    classification = classifyMeritResponse(await adapter.sendInvoice(mapped.payload));
+    const response = await adapter.sendInvoice(mapped.payload);
+    classification = classifyMeritResponse(response);
+    // An acknowledgement alone is insufficient: require complete matching mock document evidence.
+    // Real Merit acknowledgement/lookup guarantees are not verified by this foundation.
+    if (classification.outcome === OUTCOMES.CONFIRMED) {
+      const decision = confirmResponse(response, expectedDocument(invoice));
+      classification = decision.outcome === RECONCILE_OUTCOMES.FOUND
+        ? { ...classification, document: decision.document }
+        : { outcome: OUTCOMES.AMBIGUOUS, code: decision.code };
+    }
   } catch (error) {
     classification = classifyTransportError(error);
   }
 
   const settled = applyResult(claimed, classification, { now });
   const saved = await store.cas(key, claimed.version, settled);
-  const record = saved.ok ? settled : saved.current;
+  if (!saved.ok) return { outcome: "conflict", code: "cas_conflict", record: saved.current };
+  const record = settled;
 
   await store.appendAudit(
     baseEvent({
@@ -198,19 +197,20 @@ export async function reconcileExport({ invoice, connection, store, adapter, act
 
   let response;
   try {
-    response = await adapter.lookupByInvoiceNo(invoice.number);
+    response = await adapter.lookupByInvoiceNo(invoice.number, { currency: invoice.currency });
   } catch {
     // A failed lookup proves nothing. Stay put rather than guess.
     return { outcome: EXPORT_STATES.NEEDS_RECONCILIATION, code: "lookup_failed", record: current };
   }
 
-  const decision = reconcileLookup({ matches: parseLookupMatches(response), expected: { total: invoice.total } });
+  const decision = reconcileResponse(response, expectedDocument(invoice));
 
   if (decision.outcome === RECONCILE_OUTCOMES.FOUND) {
     const resolved = resolveAsExported(current, { document: decision.document, now });
     if (!resolved.ok) return { outcome: "conflict", code: resolved.code, record: current };
     const saved = await store.cas(key, current.version, resolved.next);
-    const record = saved.ok ? resolved.next : saved.current;
+    if (!saved.ok) return { outcome: "conflict", code: "cas_conflict", record: saved.current };
+    const record = resolved.next;
     await store.appendAudit({
       ...baseEvent({
         actor,
@@ -231,7 +231,8 @@ export async function reconcileExport({ invoice, connection, store, adapter, act
     const resolved = resolveAsAbsent(current, { now });
     if (!resolved.ok) return { outcome: "conflict", code: resolved.code, record: current };
     const saved = await store.cas(key, current.version, resolved.next);
-    const record = saved.ok ? resolved.next : saved.current;
+    if (!saved.ok) return { outcome: "conflict", code: "cas_conflict", record: saved.current };
+    const record = resolved.next;
     await store.appendAudit({
       ...baseEvent({
         actor,
